@@ -50,35 +50,26 @@ distclean: clean
 dist:
 	./tools/dist.sh
 
-# Tests
-#
-# This project uses jonruttan/test-runner as a git submodule at
-# tests/test-runner. The test runner is intentionally not vendored.
-#
-# Usage examples:
-#   make tests
-#   TESTS=tests/src/foo.spec.c make tests
-#   RUNNER=tests/test-runner/test-runner.sh make tests
+ifndef PATH_TESTS
+PATH_TESTS=tests
+endif
 
-tests:
-	@runner="$(RUNNER)"; \
-	[ -n "$$runner" ] || runner="tests/test-runner/test-runner.sh"; \
-	if [ ! -x "$$runner" ]; then \
-		echo "ERROR: test runner not found at $$runner"; \
+ifndef TESTS
+TESTS=$(PATH_TESTS)/src/*.spec.c
+endif
+
+TEST_RUNNER ?= tests/test-runner/test-runner.sh
+TESTS  ?= $(wildcard tests/src/*.spec.c)
+
+tests test:
+	@if [ ! -f "$(TEST_RUNNER)" ]; then \
+		echo "ERROR: test runner not found at $(TEST_RUNNER)"; \
 		echo "Hint: git submodule update --init --recursive"; \
 		exit 1; \
-	fi; \
-	tests="$(TESTS)"; \
-	if [ -z "$$tests" ]; then \
-		set -- tests/src/*.spec.c; \
-		if [ "$$1" = "tests/src/*.spec.c" ]; then \
-			echo "ERROR: no tests found (tests/src/*.spec.c)"; \
-			exit 1; \
-		fi; \
-		tests="$$@"; \
-	fi; \
-	CFLAGS="$(CFLAGS) -O0 -g -DTESTS" sh "$$runner" $$tests
+	fi
+	@CFLAGS="$(CFLAGS) -g -Og -I./src -I./include -DTESTS" sh "$(TEST_RUNNER)" $(TESTS)
 
-test: tests
+tests-quick test-quick:
+	@CFLAGS="$(CFLAGS) -g -Og -I./src -I./include -DTESTS" RUNNER=command sh "$(TEST_RUNNER)" $(TESTS)
 
-.PHONY: all clean distclean dist tests test
+.PHONY: all clean distclean dist tests test tests-quick test-quick
