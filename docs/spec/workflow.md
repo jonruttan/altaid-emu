@@ -103,4 +103,5 @@ Then:
 - Update specs per docs/spec/workflow.md.
 - Ensure `make tests` passes (or report failures).
 - Output a tarball named: altaid-emu-sliceNN-<brief-description>.tar.xz
+- The tarball MUST contain a single top-level directory named altaid-emu/ (no loose files at archive root).
 ```
