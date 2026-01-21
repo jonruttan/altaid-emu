@@ -38,6 +38,14 @@ For each slice:
   `docs/architecture.md`.
 - All new or modified code MUST include unit tests, unless the slice explicitly
   documents why tests are not practical for that change.
+- Test harness invariants (do not break):
+  - `tests/src/*.spec.c` files MUST NOT define `main()` (the test-runner provides
+    the entry point).
+  - `TEST_RUNNER` names the harness script; `WRAPPER` is an optional execution
+    wrapper (valgrind/lldb/etc.). Do not rename/remove these without an explicit
+    request.
+  - Do not remove/rename `make tests` / `make tests-wrapped` or change their
+    meaning without an explicit request.
 - Run tests before shipping the slice:
   - `make tests`
 
@@ -45,6 +53,7 @@ Optional: run tests with an instrumentation wrapper (for example valgrind or
 lldb):
 
 - `make tests-wrapped`
+Optional sanity check (ensures the runner owns `main()`):
 
 ## Release notes
 
