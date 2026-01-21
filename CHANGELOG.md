@@ -1,8 +1,13 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable **user-visible** changes to this project will be documented in this file.
 
-The format is based on Keep a Changelog and this project adheres to Semantic Versioning.
+The format is based on *Keep a Changelog* and this project aims to follow Semantic Versioning.
+
+Maintenance rules (to keep this useful and low-effort):
+- Update this file **only when cutting a release** (tags / published tarballs).
+- Keep entries **curated** (new flags, behavior changes, file format changes, important fixes).
+- Do **not** write filler like “see git history” (useful changelog beats no changelog).
 
 ## [Unreleased]
 
@@ -19,7 +24,6 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 ### Changed
 - UI/panel output moved to **stderr** to keep stdout usable for piping serial output.
 - 8080 EI pending state is now per-CPU instance (no global).
-
 
 ## [0.1.1] - 2026-01-17
 

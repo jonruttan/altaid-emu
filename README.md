@@ -3,20 +3,41 @@
 Terminal-based emulator for the **Altaid 8800** (Intel 8080): cycle-timed CPU, ALTAID05-style memory/port map, bit-level serial, cassette, and a multiplexed front panel UI.
 
 - Hardware reference: Sunrise EV Altaid 8800 (projects page)
-- Docs: `docs/project_spec_current.md` (authoritative), `docs/project_spec_v1.md` (roadmap), `docs/port-map.md`, `docs/memory-map.md`, `docs/cassette.md`, `docs/persistence.md`, `docs/fidelity.md`, `docs/troubleshooting.md` (dev notes in `docs/dev/`)
+- Docs: `docs/spec/project_spec_current.md` (authoritative), `docs/spec/project_spec_v1.md` (roadmap), `docs/spec/workflow.md` (maintenance), `docs/port-map.md`, `docs/memory-map.md`, `docs/cassette.md`, `docs/persistence.md`, `docs/fidelity.md`, `docs/troubleshooting.md` (contributor notes: `docs/style.md`, `docs/architecture.md`, `docs/release.md`)
 
 ## Project philosophy
 
 - **Keep it small:** Prefer the minimum number of tools/docs needed to ship a credible emulator.
-- **Single source of truth:** `docs/project_spec_current.md` defines current behavior. The v1 spec is aspirational only.
+- **Single source of truth:** `docs/spec/project_spec_current.md` defines current behavior. The v1 spec is aspirational only.
 - **AI/reviewers:** When scanning the project, treat the current spec as authoritative; do not assume roadmap items exist unless they appear in the current spec.
 
 
-## Platform support
+## Requirements
 
-- **Primary targets:** **Linux** and **macOS** (POSIX/Unix-like environments).
-- **Windows:** best-effort only. If it builds and runs without friction, great — but the project does **not** commit to Windows-specific workarounds or platform-specific code paths.
+This project aims to be **Unix-friendly** and keep dependencies minimal.
 
+You need:
+- A **C compiler** (`cc`, `clang`, or `gcc`)
+- **GNU make (3.81-compatible or newer)**
+- Common shell tools used by build/test scripts: `sh`, `find`, `sort`, `stat`
+- `git` (only if you want to run tests via the submodule runner)
+
+### Notes by OS
+
+- **macOS (easy path):** install Apple’s Command Line Tools (provides `cc`/`clang`, headers/SDK, and `/usr/bin/make`).
+  - Install: `xcode-select --install`
+  - Verify: `make --version` and `cc --version`
+
+- **Linux:** install a compiler toolchain + GNU make (package names vary by distro). Examples:
+  - Debian/Ubuntu: `sudo apt-get update && sudo apt-get install build-essential`
+  - Fedora: `sudo dnf groupinstall "Development Tools"`
+  - Arch: `sudo pacman -S base-devel`
+  - If you prefer clang: install `clang` and set `CC=clang` (for example: `make CC=clang`).
+
+- **Windows:** best experience is usually via **WSL2** (Ubuntu/Debian/etc.). Example (inside WSL):
+  - `sudo apt-get update && sudo apt-get install build-essential`
+
+If you already have a compiler + GNU make, you’re good — the emulator doesn’t depend on any IDE.
 
 ## Quick start
 
@@ -28,12 +49,53 @@ make
 
 ### 1a) Tests (optional)
 
-Tests use the author's **test-runner** harness (git submodule).
+Tests use the author's **test-runner** harness (git submodule at `tests/test-runner`).
 
 ```sh
 git submodule update --init --recursive
 make tests
+	# Fast path (bypasses any configured RUNNER wrapper):
+	make test-quick
+# Run a single spec file:
+TESTS=tests/src/smoke.spec.c make tests
 ```
+
+### Troubleshooting (common first-run issues)
+
+- **`make: cc: command not found` / no compiler**
+  - You need a C toolchain (`cc`/`clang`/`gcc`).
+  - macOS (easy path): `xcode-select --install`
+  - Debian/Ubuntu/WSL: `sudo apt-get update && sudo apt-get install build-essential`
+
+- **Tests fail with: `ERROR: test runner not found ...`**
+  - The test runner is a git submodule:
+
+    ```sh
+    git submodule update --init --recursive
+    ```
+
+- **Tests fail with: `ERROR: no tests matched ...`**
+  - Check that test files exist:
+
+    ```sh
+    ls -la tests/src/*.spec.c
+    ```
+
+- **UI looks garbled / borders don’t line up**
+  - Try forcing ASCII borders: `--ascii`
+  - Make sure your terminal is at least **80×25** (or override with `-x/-y`).
+
+- **No banner / nothing seems to happen**
+  - Verify your ROM is **exactly 65536 bytes**:
+
+    ```sh
+    ls -l my64k.rom
+    ```
+
+  - For more detail, log diagnostics: `./altaid-emu my64k.rom --log emu.log`
+
+For more, see `docs/troubleshooting.md`.
+
 
 ### 2) Get a 64 KiB ROM image
 
@@ -189,7 +251,7 @@ See `CREDITS.md` for project credits.
 
 ## Coding style
 
-See `docs/dev/style.md` for the coding style used in this repo.
+See `docs/style.md` for the coding style used in this repo.
 
 ## Contributing
 
@@ -197,4 +259,4 @@ See `CONTRIBUTING.md`.
 
 ## Architecture
 
-See `docs/dev/architecture.md` for an overview of the core/host/UI split and test seams.
+See `docs/architecture.md` for an overview of the core/host/UI split and test seams.

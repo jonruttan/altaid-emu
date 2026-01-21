@@ -4,6 +4,7 @@ Thanks for contributing!
 
 ## Ground rules
 
+- Follow the slice workflow in `docs/spec/workflow.md`.
 - Keep changes small and reviewable.
 - Prefer portability (macOS + Linux). Avoid non-POSIX APIs unless guarded.
 - When changing I/O behavior, update `docs/port-map.md` and/or `docs/memory-map.md`.
@@ -27,7 +28,7 @@ If you add fidelity fixes, please add targeted regression tests under `tests/`.
 
 ## Coding style
 
-Please follow the project coding style (Linux-kernel-ish) described in `docs/dev/style.md`.
+Please follow the project coding style (Linux-kernel-ish) described in `docs/style.md`.
 
 Before submitting a PR, run:
 

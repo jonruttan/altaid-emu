@@ -1,4 +1,8 @@
-# Architecture
+# Architecture (non-normative)
+
+This is a brief contributor-oriented overview to help you find your way around
+the code. It is **not** a behavior contract. If a slice changes module
+boundaries or responsibilities, update this document in the same slice.
 
 This emulator is intentionally split into **three layers**.
 

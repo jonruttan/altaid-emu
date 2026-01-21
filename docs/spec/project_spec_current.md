@@ -9,14 +9,16 @@ status: living-document
 
 This document is the **single source of truth** for what this repository’s emulator and tooling **currently** do and promise to users today.
 
-- The **v1.0 aspirations** live in `docs/project_spec_v1.md` (roadmap/target behavior).
+- The **v1.0 aspirations** live in `docs/spec/project_spec_v1.md` (roadmap/target behavior).
 - When the repo changes behavior, update **this** document first, then adjust `docs/acceptance_tests.md` (if present) and any docs/README snippets.
 
 - **Normative language**: “MUST/SHOULD/MAY” is intentional.
 - **Scope**: emulator behavior + CLI/TUI/panel + cassette + persistence + build/release expectations.
 - **Non-goals**: This is not a design doc; it is a behavior contract.
 
-**Project philosophy:** keep the project small and shippable. Avoid adding new tools/docs unless they directly reduce user confusion, prevent regressions, or simplify contribution.
+**Project philosophy:** keep the project small and shippable.
+
+**Maintenance workflow:** see `docs/spec/workflow.md` for the slice checklist and update rules. Avoid adding new tools/docs unless they directly reduce user confusion, prevent regressions, or simplify contribution.
 
 # Product overview
 
