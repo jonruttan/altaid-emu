@@ -33,7 +33,7 @@ distclean: clean
 dist:
 	./tools/dist.sh
 
-test:
+test-wrapped:
 	@if [ ! -f "$(TEST_RUNNER)" ]; then \
 		echo "ERROR: test runner not found at $(TEST_RUNNER)"; \
 		echo "Hint: git submodule update --init --recursive"; \
@@ -41,10 +41,10 @@ test:
 	fi
 	@CFLAGS="$(CFLAGS) -g -Og -I./src -I./include -DTESTS" sh "$(TEST_RUNNER)" $(TESTS)
 
-test-quick:
-	@RUNNER=command $(MAKE) test
+test:
+	@WRAPPER=command $(MAKE) test-wrapped
 
-tests: tests
-tests-quick: tests-quick
+tests-deep: test-wrapped
+tests: test
 
-.PHONY: all clean distclean dist tests test tests-quick test-quick
+.PHONY: all clean distclean dist test-wrapped test tests-wrapped tests
