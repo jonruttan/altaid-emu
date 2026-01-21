@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cc: gcc
+          - os: ubuntu-latest
+            cc: clang
+          - os: macos-latest
+            cc: clang
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Refuse committed build artifacts
+        run: |
+          set -eu
+          # Single source of truth: this CI step forbids tracked build outputs.
+          # .gitignore does not prevent committing artifacts (tracked files ignore it).
+          bad=$(git ls-files | egrep '(^|/)(altaid-emu$|.*\.o$)' || true)
+          if [ -n "$bad" ]; then
+            echo "ERROR: committed build artifacts detected:" 1>&2
+            echo "$bad" 1>&2
+            exit 1
+          fi
+
+      - name: Style gate
+        run: |
+          ./tools/check_style.sh
+
+      - name: Build
+        run: |
+          make clean
+          make CC=${{ matrix.cc }} CFLAGS="-std=c99 -O2 -Wall -Wextra -Werror"
+
+      - name: Smoke (help)
+        run: |
+          ./altaid-emu --help
+
+      - name: Tests
+        run: |
+          make tests

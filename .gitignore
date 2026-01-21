@@ -1,0 +1,34 @@
+# Build outputs
+/altaid-emu
+src/*.o
+*.obj
+*.exe
+*.dll
+*.dylib
+*.so
+
+# ROM / firmware images (not distributed)
+*.rom
+*.bin
+*.hex
+
+# Cassette capture files
+*.ALTAP001
+*.altap
+
+# Logs
+*.log
+
+# OS/editor junk
+.DS_Store
+._*
+*.swp
+*.swo
+*~
+
+# Python cache (tools scripts)
+__pycache__/
+*.pyc
+
+# Release artifacts
+dist/

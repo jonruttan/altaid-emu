@@ -1,0 +1,22 @@
+# Conservative clang-format configuration approximating Linux kernel style.
+#
+# Note: the kernel itself does not use clang-format universally, but this is a
+# helpful on-ramp for contributors.
+
+BasedOnStyle: LLVM
+IndentWidth: 8
+TabWidth: 8
+UseTab: Always
+ContinuationIndentWidth: 8
+BreakBeforeBraces: Linux
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+ColumnLimit: 80
+PointerAlignment: Right
+AlignAfterOpenBracket: DontAlign
+BinPackParameters: false
+BinPackArguments: false
+SpaceAfterCStyleCast: true
+SpacesInCStyleCastParentheses: false
+SortIncludes: false
