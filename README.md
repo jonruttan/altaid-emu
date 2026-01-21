@@ -3,7 +3,13 @@
 Terminal-based emulator for the **Altaid 8800** (Intel 8080): cycle-timed CPU, ALTAID05-style memory/port map, bit-level serial, cassette, and a multiplexed front panel UI.
 
 - Hardware reference: Sunrise EV Altaid 8800 (projects page)
-- Docs: `docs/spec/project_spec_current.md` (authoritative), `docs/spec/project_spec_v1.md` (roadmap), `docs/spec/workflow.md` (maintenance), `docs/port-map.md`, `docs/memory-map.md`, `docs/cassette.md`, `docs/persistence.md`, `docs/fidelity.md`, `docs/troubleshooting.md` (contributor notes: `docs/style.md`, `docs/architecture.md`, `docs/release.md`)
+- Docs:
+  - Specs: `docs/spec/project_spec_current.md` (authoritative),
+    `docs/spec/project_spec_v1.md` (roadmap), `docs/spec/workflow.md` (workflow)
+  - Hardware / I/O: `docs/port-map.md`, `docs/memory-map.md`, `docs/cassette.md`,
+    `docs/persistence.md`, `docs/fidelity.md`
+  - Troubleshooting: `docs/troubleshooting.md`
+  - Contributing: `docs/style.md`, `docs/architecture.md`, `docs/release.md`
 
 ## Project philosophy
 
@@ -54,8 +60,8 @@ Tests use the author's **test-runner** harness (git submodule at `tests/test-run
 ```sh
 git submodule update --init --recursive
 make tests
-	# Fast path (bypasses any configured RUNNER wrapper):
-	make test-quick
+# Instrumented run (valgrind/lldb/etc. via WRAPPER):
+make tests-wrapped
 # Run a single spec file:
 TESTS=tests/src/smoke.spec.c make tests
 ```

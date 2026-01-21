@@ -12,11 +12,6 @@ prevent regressions, or simplify contribution.
   - User docs: memory/port map, cassette, persistence, troubleshooting.
   - Contributor docs: `docs/style.md`, `docs/architecture.md`, `docs/release.md`.
 - `docs/spec/` : product specs (current + v1) and workflow for maintaining them.
-- `include/` : header files.
-- `src/` : source files.
-- `tests/` : unit testing.
-  - `tests/src` : unit tests.
-  - `tests/test-runner` : harness framework
 
 ## Specs and single source of truth
 
@@ -41,8 +36,15 @@ For each slice:
   v1 document to mark/adjust the item.
 - If you change module boundaries or responsibilities, update
   `docs/architecture.md`.
+- All new or modified code MUST include unit tests, unless the slice explicitly
+  documents why tests are not practical for that change.
 - Run tests before shipping the slice:
   - `make tests`
+
+Optional: run tests with an instrumentation wrapper (for example valgrind or
+lldb):
+
+- `make tests-wrapped`
 
 ## Release notes
 
@@ -90,6 +92,6 @@ Then:
 - Choose the next smallest high-value slice.
 - Implement exactly one slice.
 - Update specs per docs/spec/workflow.md.
-- Ensure make tests passes (or report failures).
+- Ensure `make tests` passes (or report failures).
 - Output a tarball named: altaid-emu-sliceNN-<brief-description>.tar.xz
 ```

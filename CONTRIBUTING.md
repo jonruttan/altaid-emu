@@ -17,8 +17,20 @@ make clean && make
 
 ## Testing
 
-This repo currently ships with **smoke tests only** (build + `-h`).
-If you add fidelity fixes, please add targeted regression tests under `tests/`.
+Run the test suite:
+
+```sh
+make tests
+```
+
+Optional: run tests under an instrumentation wrapper (for example valgrind or lldb):
+
+```sh
+make tests-wrapped
+```
+
+If you add fidelity fixes or change behavior, please add targeted regression tests
+under `tests/src/`.
 
 ## Style
 

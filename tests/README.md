@@ -17,6 +17,19 @@ git submodule update --init --recursive
 make tests
 ```
 
+To run with an instrumentation wrapper (for example valgrind or lldb):
+
+```sh
+make tests-wrapped
+```
+
+You can override the wrapper explicitly:
+
+```sh
+WRAPPER='valgrind --leak-check=full' make tests-wrapped
+WRAPPER='lldb --batch -o run --' make tests-wrapped
+```
+
 You can also run a single spec file:
 
 ```sh

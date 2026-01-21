@@ -27,7 +27,7 @@ This document defines the **v1.0 target** for the Altaid 8800 emulator.
 V1-GOV-001 (MUST; Status: Planned): `docs/spec/project_spec_current.md` MUST remain the authoritative description of shipped behavior.
 V1-GOV-002 (MUST; Status: Planned): This document MUST NOT be treated as authoritative for current behavior.
 V1-GOV-003 (SHOULD; Status: Planned): Each v1.0 requirement SHOULD be worded as a user-visible contract and avoid implementation details.
-V1-GOV-004 (SHOULD; Status: Planned): When a v1.0 requirement is implemented, it SHOULD be copied (or refactored) into the current spec and covered by an acceptance test in `docs/acceptance_tests.md`.
+V1-GOV-004 (SHOULD; Status: Planned): When a v1.0 requirement is implemented, it SHOULD be copied (or refactored) into the current spec and covered by a black-box check, preferably a test under `tests/src/*.spec.c`.
 
 # v1.0 scope
 

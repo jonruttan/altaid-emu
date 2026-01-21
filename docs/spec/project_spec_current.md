@@ -10,7 +10,8 @@ status: living-document
 This document is the **single source of truth** for what this repository’s emulator and tooling **currently** do and promise to users today.
 
 - The **v1.0 aspirations** live in `docs/spec/project_spec_v1.md` (roadmap/target behavior).
-- When the repo changes behavior, update **this** document first, then adjust `docs/acceptance_tests.md` (if present) and any docs/README snippets.
+- When the repo changes behavior, update **this** document first, then adjust any relevant docs/README snippets.
+- Verification lives in `tests/src/*.spec.c` (preferred) and/or the README “golden path” examples.
 
 - **Normative language**: “MUST/SHOULD/MAY” is intentional.
 - **Scope**: emulator behavior + CLI/TUI/panel + cassette + persistence + build/release expectations.
