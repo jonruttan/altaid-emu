@@ -33,7 +33,7 @@ distclean: clean
 dist:
 	./tools/dist.sh
 
-test-wrapped:
+test-wrapped: altaid-emu
 	@if [ ! -f "$(TEST_RUNNER)" ]; then \
 		echo "ERROR: test runner not found at $(TEST_RUNNER)"; \
 		echo "Hint: git submodule update --init --recursive"; \
