@@ -37,6 +37,8 @@ test-wrapped:
 	@if [ ! -f "$(TEST_RUNNER)" ]; then \
 		echo "ERROR: test runner not found at $(TEST_RUNNER)"; \
 		echo "Hint: git submodule update --init --recursive"; \
+		echo "Alt (GitHub source archive): download test-runner main.zip and extract into: tests/test-runner/"; \
+		echo "  https://github.com/jonruttan/test-runner/archive/refs/heads/main.zip"; \
 		exit 1; \
 	fi
 	@CFLAGS="$(CFLAGS) -g -Og -I./src -I./include -DTESTS" sh "$(TEST_RUNNER)" $(TESTS)
