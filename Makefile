@@ -44,7 +44,7 @@ test-wrapped:
 test:
 	@WRAPPER=command $(MAKE) test-wrapped
 
-tests-deep: test-wrapped
+tests-wrapped: test-wrapped
 tests: test
 
 .PHONY: all clean distclean dist test-wrapped test tests-wrapped tests
