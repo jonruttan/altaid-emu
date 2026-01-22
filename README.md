@@ -26,7 +26,6 @@ You need:
 - A **C compiler** (`cc`, `clang`, or `gcc`)
 - **GNU make (3.81-compatible or newer)**
 - Common shell tools used by build/test scripts: `sh`, `find`, `sort`, `stat`
-- `git` (only if you want to run tests via the submodule runner)
 
 ### Notes by OS
 

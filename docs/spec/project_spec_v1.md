@@ -29,6 +29,14 @@ V1-GOV-002 (MUST; Status: Planned): This document MUST NOT be treated as authori
 V1-GOV-003 (SHOULD; Status: Planned): Each v1.0 requirement SHOULD be worded as a user-visible contract and avoid implementation details.
 V1-GOV-004 (SHOULD; Status: Planned): When a v1.0 requirement is implemented, it SHOULD be copied (or refactored) into the current spec and covered by a black-box check, preferably a test under `tests/src/*.spec.c`.
 
+# Project maintenance and meta-spec
+
+V1-META-001 (MUST; Status: Done): The repo MUST maintain `docs/spec/design_philosophy.md` as the canonical record of enduring principles for maintaining this project.
+V1-META-002 (MUST; Status: Done): The repo MUST maintain `docs/spec/project_decisions.md` as the canonical decision log (ADR-style).
+V1-META-003 (MUST; Status: Done): Multi-step procedures MUST have exactly one canonical home; other docs MAY paraphrase but MUST NOT duplicate the full procedure.
+V1-META-004 (SHOULD; Status: Done): The maintenance workflow SHOULD track the next slice number for continuity across sessions.
+
+
 # v1.0 scope
 
 The v1.0 release targets a credible public emulator experience for the Altaid 8800 concept (8080 + panel + memory/I-O board with serial and cassette), with emphasis on:

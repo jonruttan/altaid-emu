@@ -22,6 +22,29 @@ prevent regressions, or simplify contribution.
 If a slice changes user-visible behavior, update **current spec** in the same
 slice.
 
+
+## Meta project concepts
+
+- Canonical sources for project philosophy and rationale:
+  - `docs/spec/design_philosophy.md`
+  - `docs/spec/project_decisions.md`
+
+- When a slice is motivated by (or introduces) a new principle/constraint, update
+  one or both canonical meta-spec documents in the same slice.
+
+- Documentation duplication rule:
+  - Multi-step procedures MUST have exactly one canonical home.
+  - Other documents MAY paraphrase, but MUST NOT duplicate the full procedure.
+  - Build output (e.g., Makefile errors) MAY print short hints, but MUST NOT
+    become a second troubleshooting manual.
+
+## Slice numbering
+
+Slice numbers are bookkeeping for ordering/naming and continuity across chats.
+
+- **Next slice number:** 23
+- After shipping a slice, increment the next slice number.
+
 ## Slice checklist
 
 For each slice:
