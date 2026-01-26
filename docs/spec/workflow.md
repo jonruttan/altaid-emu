@@ -10,7 +10,8 @@ prevent regressions, or simplify contribution.
 
 - `docs/` : documentation for humans (usage + contributor notes).
   - User docs: memory/port map, cassette, persistence, troubleshooting.
-  - Contributor docs: `docs/style.md`, `docs/architecture.md`, `docs/release.md`.
+  - Contributor docs: `docs/spec/style.md`, `docs/architecture.md`,
+    `docs/spec/release.md`.
 - `docs/spec/` : product specs (current + v1) and workflow for maintaining them.
 
 ## Specs and single source of truth
@@ -62,7 +63,7 @@ Release notes live in `CHANGELOG.md`.
 To keep maintenance overhead low and avoid stale noise:
 
 - Update `CHANGELOG.md` **only when preparing a release** (see
-  `docs/release.md`).
+  `docs/spec/release.md`).
 - Keep entries **user-visible** and curated (flags, behavior, formats, notable
   fixes).
 - Do **not** add filler like “see git history”. If you can't summarize it for

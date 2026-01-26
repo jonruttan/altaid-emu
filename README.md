@@ -9,7 +9,8 @@ Terminal-based emulator for the **Altaid 8800** (Intel 8080): cycle-timed CPU, A
   - Hardware / I/O: `docs/port-map.md`, `docs/memory-map.md`, `docs/cassette.md`,
     `docs/persistence.md`, `docs/fidelity.md`
   - Troubleshooting: `docs/troubleshooting.md`
-  - Contributing: `docs/style.md`, `docs/architecture.md`, `docs/release.md`
+  - Contributing: `docs/spec/style.md`, `docs/architecture.md`,
+    `docs/spec/release.md`
 
 ## Project philosophy
 
@@ -259,7 +260,7 @@ See `CREDITS.md` for project credits.
 
 ## Coding style
 
-See `docs/style.md` for the coding style used in this repo.
+See `docs/spec/style.md` for the coding style used in this repo.
 
 ## Contributing
 

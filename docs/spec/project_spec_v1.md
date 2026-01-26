@@ -152,6 +152,6 @@ V1-DOC-005 (SHOULD; Status: Planned): The repo SHOULD provide a concise build tr
 - common build errors and how to report them (include `./altaid-emu --version` output)
 
 
-V1-DOC-007 (SHOULD; Status: Done): The repo SHOULD document the release process (version bump, changelog update, tags, and `make dist`) in `docs/release.md`.
+V1-DOC-007 (SHOULD; Status: Done): The repo SHOULD document the release process (version bump, changelog update, tags, and `make dist`) in `docs/spec/release.md`.
 
 V1-DOC-006 (SHOULD; Status: Done): The repo SHOULD maintain a small `CHANGELOG.md` containing user-visible release notes, updated when releases are cut.

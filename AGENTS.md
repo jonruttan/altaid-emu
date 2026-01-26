@@ -20,7 +20,7 @@ low maintenance overhead, and spec-truthfulness.
 Then consult as-needed:
 - docs/spec/design_philosophy.md
 - docs/spec/project_decisions.md
-- docs/style.md
+- docs/spec/style.md
 - docs/architecture.md (when moving responsibilities/boundaries)
 
 ## Slice execution rules

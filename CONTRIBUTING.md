@@ -40,7 +40,8 @@ under `tests/unit/` and `tests/e2e`.
 
 ## Coding style
 
-Please follow the project coding style (Linux-kernel-ish) described in `docs/style.md`.
+Please follow the project coding style (Linux-kernel-ish) described in
+`docs/spec/style.md`.
 
 Before submitting a PR, run:
 
