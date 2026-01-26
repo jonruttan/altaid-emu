@@ -23,9 +23,10 @@ Terminal-based emulator for the **Altaid 8800** (Intel 8080): cycle-timed CPU, A
 This project aims to be **Unix-friendly** and keep dependencies minimal.
 
 You need:
-- A **C compiler** (`cc`, `clang`, or `gcc`)
-- **GNU make (3.81-compatible or newer)**
+- A **C compiler** (`cc`, `gcc`, `clang`, etc.)
+- **GNU make**
 - Common shell tools used by build/test scripts: `sh`, `find`, `sort`, `stat`
+- `git` (optional, but suggested)
 
 ### Notes by OS
 
@@ -63,6 +64,9 @@ make tests
 make tests-wrapped
 # Run a single spec file:
 TESTS=tests/src/smoke.spec.c make tests
+
+# Note: smoke.spec.c is an end-to-end smoke test. It uses system() to run
+#       ./altaid-emu --help and may build the binary if it is missing.
 ```
 
 ### Troubleshooting (common first-run issues)

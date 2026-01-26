@@ -15,7 +15,8 @@ LIB_SRCS := $(filter-out src/main.c,$(SRC_ALL))
 OBJS = $(SRC_ALL:.c=.o)
 
 TEST_RUNNER ?= tests/test-runner/test-runner.sh
-TESTS ?= $(wildcard tests/src/*.spec.c)
+TEST_PATH ?= tests
+TESTS ?= $(TEST_PATH)/unit
 
 all: altaid-emu
 
@@ -33,7 +34,9 @@ distclean: clean
 dist:
 	./tools/dist.sh
 
-test-wrapped: altaid-emu
+.PHONY: all clean distclean dist
+
+test-wrapped:
 	@if [ ! -f "$(TEST_RUNNER)" ]; then \
 		echo "ERROR: test runner not found at $(TEST_RUNNER)"; \
 		echo "Hint: git submodule update --init --recursive"; \
@@ -44,9 +47,18 @@ test-wrapped: altaid-emu
 	@CFLAGS="$(CFLAGS) -g -Og -I./src -I./include -DTESTS" sh "$(TEST_RUNNER)" $(TESTS)
 
 test:
-	@WRAPPER=command $(MAKE) test-wrapped
+	@WRAPPER=command TESTS=$(TESTS) $(MAKE) test-wrapped
 
-tests-wrapped: test-wrapped
-tests: test
+test-unit: TESTS=$(TEST_PATH)/unit
+test-unit: test
 
-.PHONY: all clean distclean dist test-wrapped test tests-wrapped tests
+test-unit-wrapped: TESTS=$(TEST_PATH)/unit
+test-unit-wrapped: test-wrapped
+
+test-e2e: TESTS=$(TEST_PATH)/e2e
+test-e2e: altaid-emu test
+
+test-e2e-wrapped: TESTS=$(TEST_PATH)/e2e
+test-e2e-wrapped: altaid-emu test-wrapped
+
+.PHONY: test-wrapped test test-unit test-unit-wrapped test-e2e test-e2e-wrapped

@@ -1,7 +1,7 @@
 ---
 title: Altaid 8800 Emulator — v1.0 Aspirational Project Spec (Roadmap)
 spec_version: 1.0
-last_updated: 2026-01-21
+last_updated: 2026-01-20
 status: target-roadmap
 ---
 
@@ -28,14 +28,6 @@ V1-GOV-001 (MUST; Status: Planned): `docs/spec/project_spec_current.md` MUST rem
 V1-GOV-002 (MUST; Status: Planned): This document MUST NOT be treated as authoritative for current behavior.
 V1-GOV-003 (SHOULD; Status: Planned): Each v1.0 requirement SHOULD be worded as a user-visible contract and avoid implementation details.
 V1-GOV-004 (SHOULD; Status: Planned): When a v1.0 requirement is implemented, it SHOULD be copied (or refactored) into the current spec and covered by a black-box check, preferably a test under `tests/src/*.spec.c`.
-
-# Project maintenance and meta-spec
-
-V1-META-001 (MUST; Status: Done): The repo MUST maintain `docs/spec/design_philosophy.md` as the canonical record of enduring principles for maintaining this project.
-V1-META-002 (MUST; Status: Done): The repo MUST maintain `docs/spec/project_decisions.md` as the canonical decision log (ADR-style).
-V1-META-003 (MUST; Status: Done): Multi-step procedures MUST have exactly one canonical home; other docs MAY paraphrase but MUST NOT duplicate the full procedure.
-V1-META-004 (SHOULD; Status: Done): The maintenance workflow SHOULD track the next slice number for continuity across sessions.
-
 
 # v1.0 scope
 
@@ -79,7 +71,7 @@ V1-CPU-004 (SHOULD; Status: Planned): A `--trace-cpu` or equivalent debug facili
 
 # Hardware model and memory map
 
-V1-HW-001 (MUST; Status: Done): The memory map and I/O port map MUST be documented in `docs/`.
+V1-HW-001 (MUST; Status: Planned): The memory map and I/O port map MUST be documented in `docs/`.
 V1-HW-002 (MUST; Status: Planned): The emulator MUST support the ROM + RAM + bank/overlay behavior required to boot the primary supported ROM profile.
 V1-HW-003 (SHOULD; Status: Planned): The emulator SHOULD support selectable hardware profiles (e.g., `--hw-profile <name>`) if multiple ROM families exist.
 V1-HW-004 (SHOULD; Status: Planned): Power-on/reset behavior SHOULD be documented (which latches reset, what RAM contents are, what bank/overlay bits do).
@@ -93,9 +85,9 @@ V1-PNL-004 (SHOULD; Status: Planned): The panel SHOULD provide discoverable help
 
 # TUI rendering and Unicode
 
-V1-TUI-001 (MUST; Status: Done): In full-screen TUI mode, the statusline MUST remain visible at all times.
-V1-TUI-002 (MUST; Status: Done): The panel region and serial region MUST NOT overlap for terminals >= 80x25.
-V1-TUI-003 (MUST; Status: Done): Help text MUST render into the serial region (no hidden output behind the panel).
+V1-TUI-001 (MUST; Status: Planned): In full-screen TUI mode, the statusline MUST remain visible at all times.
+V1-TUI-002 (MUST; Status: Planned): The panel region and serial region MUST NOT overlap for terminals >= 80x25.
+V1-TUI-003 (MUST; Status: Planned): Help text MUST render into the serial region (no hidden output behind the panel).
 
 V1-TUI-010 (MUST; Status: Planned): TUI SHOULD auto-detect UTF-8 capability (locale/terminal) and prefer Unicode box-drawing borders when supported. (Default Unicode borders + `--ascii` fallback are already part of the current behavior contract.)
 V1-TUI-011 (SHOULD; Status: Planned): A `--unicode` flag SHOULD force Unicode rendering even if detection is inconclusive.
@@ -103,8 +95,8 @@ V1-TUI-012 (SHOULD; Status: Planned): Other optional Unicode niceties MAY be use
 
 # Serial I/O and host integration
 
-V1-SER-001 (MUST; Status: Done): The emulator MUST support interactive serial I/O to the host terminal (non-PTY mode).
-V1-SER-002 (MUST; Status: Done): The emulator MUST support PTY mode for integrating with terminal programs.
+V1-SER-001 (MUST; Status: Planned): The emulator MUST support interactive serial I/O to the host terminal (non-PTY mode).
+V1-SER-002 (MUST; Status: Planned): The emulator MUST support PTY mode for integrating with terminal programs.
 V1-SER-003 (SHOULD; Status: Planned): Documentation SHOULD include a "golden path" for connecting to the PTY and loading software over serial.
 
 V1-SER-010 (SHOULD; Status: Planned): The repo SHOULD include a small serial sending utility in `tools/` that supports:

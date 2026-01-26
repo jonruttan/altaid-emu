@@ -51,4 +51,5 @@ jobs:
 
       - name: Tests
         run: |
-          make tests
+          make test-unit
+          make test-e2e

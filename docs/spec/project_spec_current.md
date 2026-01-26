@@ -1,7 +1,7 @@
 ---
 title: Altaid 8800 Emulator — Current Project Spec (Authoritative)
 spec_version: 0.1
-last_updated: 2026-01-21
+last_updated: 2026-01-20
 status: living-document
 ---
 
@@ -20,15 +20,6 @@ This document is the **single source of truth** for what this repository’s emu
 **Project philosophy:** keep the project small and shippable.
 
 **Maintenance workflow:** see `docs/spec/workflow.md` for the slice checklist and update rules. Avoid adding new tools/docs unless they directly reduce user confusion, prevent regressions, or simplify contribution.
-
-**Meta project concepts:**
-
-- Canonical sources for project philosophy and rationale:
-  - `docs/spec/design_philosophy.md`
-  - `docs/spec/project_decisions.md`
-- Multi-step procedures MUST have exactly one canonical home.
-  Other documents MAY paraphrase, but MUST NOT duplicate the full procedure.
-
 
 # Product overview
 

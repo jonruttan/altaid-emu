@@ -41,9 +41,9 @@ int main(int argc, char **argv)
 		fprintf(stdout, "altaid-emu %s\n", altaid_emu_version());
 		return 0;
 	}
-	if (cfg.show_help || !cfg.rom_path) {
+	if (cfg.show_help) {
 		cli_usage(argv[0]);
-		return cfg.rom_path ? 0 : 2;
+		return 0;
 	}
 
 	if ((cfg.cassette_play || cfg.cassette_rec) && !cfg.cassette_path) {

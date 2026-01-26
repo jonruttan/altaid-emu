@@ -78,6 +78,101 @@ costs.
 
 ---
 
+### Prefer explicit context over mutable globals
+
+**Intent:** Keep state and dependencies explicit so the code remains testable,
+composable, and adaptable.
+
+**Rationale:** Implicit global state couples unrelated modules, makes unit tests
+fragile, and blocks running multiple emulator instances in one process.
+
+**Do:**
+- Store runtime state (logging, UI/panel state, routing flags) in a per-instance
+  context (for example `EmuHost`, `UI`, or a dedicated context struct).
+- Pass the context into functions that need it.
+- Keep side effects at the edges: rendering/logging/IO should be driven by
+  explicit streams or handles.
+
+**Don't:**
+- Add new mutable globals for convenience.
+
+**Exception:** A single global pointer MAY be used when required by OS callbacks
+(for example signal handlers), but it should remain narrow and well-documented.
+
+---
+
+### Isolate side effects and make outputs swappable
+
+**Intent:** Side-effect-free code is easier to test; side effects should be
+isolated and easy to redirect.
+
+**Rationale:** If modules write to process-global stdout/stderr directly, tests
+must intercept global state and the TUI can be corrupted.
+
+**Do:**
+- Route user-visible output through explicit `FILE *` streams owned by the
+  instance (or a logger/panel object).
+- Keep parsing/validation logic free of side effects.
+
+**Don't:**
+- Mix argument parsing, IO, and emulator execution in one function without
+  clear boundaries.
+
+---
+
+### Improve upstream test tools rather than adding ad-hoc harness code
+
+**Intent:** Keep the emulator repo focused on emulator behavior.
+
+**Rationale:** Repo-local output-capture and system-call interception code tends
+to drift, duplicates effort across projects, and violates separation of
+concerns.
+
+**Do:**
+- Enhance upstream test helpers (e.g., file/memory capture) when tests need new
+  capabilities.
+
+**Don't:**
+- Add one-off harness code inside the emulator project to paper over missing
+  test-runner functionality.
+
+---
+
+### Keep shared types in neutral headers
+
+**Intent:** Avoid smearing cross-cutting types into subsystem headers.
+
+**Rationale:** When a shared type lives in a narrow subsystem header (for
+example, CLI), unrelated code must include that subsystem just to access the
+type. This increases coupling, makes tests more fragile, and blurs ownership.
+
+**Do:**
+- Place widely-used structs/enums in a neutral header owned by the layer that
+  consumes them (for example, emulator/host configuration).
+- Keep subsystem headers focused on their own APIs.
+
+**Don't:**
+- Define emulator-wide configuration types in a CLI header.
+
+---
+
+### Name types by their true scope
+
+**Intent:** Avoid misleading names that cause architecture drift.
+
+**Rationale:** If a type contains host/UI/integration settings as well as emulator
+core settings, calling it "Emu*" smears responsibilities and invites misuse.
+
+**Do:**
+- Name cross-layer types by the layer that owns/consumes them (e.g., application
+  run configuration).
+
+**Don't:**
+- Use narrow names for mixed-scope data structures.
+
+
+---
+
 ### Slice numbers are coordination, not correctness
 
 **Intent:** Use slice numbers to keep work ordered and easy to reference.

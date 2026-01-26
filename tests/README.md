@@ -17,6 +17,10 @@ git submodule update --init --recursive
 make tests
 ```
 
+Note: `tests/src/smoke.spec.c` is an end-to-end smoke test. It uses
+`system()` to run `./altaid-emu --help` and may build the binary if it is
+missing.
+
 To run with an instrumentation wrapper (for example valgrind or lldb):
 
 ```sh
