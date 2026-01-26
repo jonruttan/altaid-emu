@@ -45,6 +45,10 @@ V1-BLD-003 (MUST; Status: Done): `make clean && make` MUST produce a runnable `.
 V1-BLD-004 (SHOULD; Status: Done): CI MUST build on Linux and macOS and run at least one runtime smoke test.
 V1-BLD-005 (SHOULD; Status: Done): A `make dist` or `tools/dist.sh` workflow SHOULD produce a source release tarball that contains no generated files.
 
+# Testing coverage
+
+V1-TST-001 (SHOULD; Status: Planned): The repo SHOULD include unit and end-to-end tests covering core subsystems (CPU, serial, cassette, persistence, UI).
+
 # First-run experience
 
 V1-FRX-001 (MUST; Status: Planned): A user MUST be able to verify the emulator runs without requiring proprietary ROMs.
