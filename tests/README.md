@@ -18,8 +18,7 @@ make test-all
 ```
 
 Note: `tests/e2e/smoke.spec.c` is an end-to-end smoke test. It uses
-`system()` to run `./altaid-emu --help` and may build the binary if it is
-missing.
+`system()` to run `./altaid-emu --help`.
 
 To run with an instrumentation wrapper (for example valgrind or lldb):
 
