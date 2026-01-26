@@ -17,6 +17,8 @@ prevent regressions, or simplify contribution.
     `docs/architecture.md`, `docs/spec/release.md`.
 - `docs/spec/` : product specs (current + v1) and workflow for maintaining them.
 
+For human contributors, start with `CONTRIBUTING.md`.
+
 ## Specs and single source of truth
 
 - `docs/spec/project_spec_current.md` is the **single source of truth** for what
