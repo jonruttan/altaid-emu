@@ -21,6 +21,7 @@ This document is the **single source of truth** for what this repository’s emu
 **Project philosophy:** keep the project small and shippable.
 
 **Maintenance workflow:** see `docs/spec/workflow.md` for the slice checklist and update rules. Avoid adding new tools/docs unless they directly reduce user confusion, prevent regressions, or simplify contribution.
+**Commit messages:** follow `docs/spec/commit-guidelines.md` when preparing commits.
 
 # Product overview
 
