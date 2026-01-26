@@ -2,6 +2,8 @@
 
 ## Goals
 
+This guidance applies to both human and AI contributors.
+
 - Improve clarity when browsing history
 - Make `git bisect` easier by keeping commits focused and well-described
 - Enable automated release notes / changelog generation (when desired)
