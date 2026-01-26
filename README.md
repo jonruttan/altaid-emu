@@ -5,7 +5,7 @@ Terminal-based emulator for the **Altaid 8800** (Intel 8080): cycle-timed CPU, A
 - Hardware reference: Sunrise EV Altaid 8800 (projects page)
 - Docs:
   - Specs: `docs/spec/project_spec_current.md` (authoritative),
-    `docs/spec/project_spec_v1.md` (roadmap), `docs/spec/workflow.md` (workflow)
+    `docs/spec/project_spec_v1.md` (roadmap)
   - Hardware / I/O: `docs/port-map.md`, `docs/memory-map.md`, `docs/cassette.md`,
     `docs/persistence.md`, `docs/fidelity.md`
   - Troubleshooting: `docs/troubleshooting.md`
