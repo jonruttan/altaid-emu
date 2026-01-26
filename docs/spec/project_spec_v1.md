@@ -20,8 +20,6 @@ This document defines the **v1.0 target** for the Altaid 8800 emulator.
 - When a v1.0 target is implemented (or intentionally descoped), update `docs/spec/project_spec_current.md` to reflect reality.
 
 
-**Maintenance workflow:** see `docs/spec/workflow.md` for the slice checklist and update rules.
-
 # Spec governance
 
 V1-GOV-001 (MUST; Status: Planned): `docs/spec/project_spec_current.md` MUST remain the authoritative description of shipped behavior.
