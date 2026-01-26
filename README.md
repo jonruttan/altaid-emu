@@ -140,6 +140,7 @@ Panel options:
 
 Serial options:
 - `-t, --pty`: expose emulated serial via a host PTY (for `screen`, `minicom`, `lrzsz`, etc.)
+- `-I, --pty-input`: in `--pty` mode, allow local keyboard input as serial RX
 - `-S, --serial-fd <stdout|stderr>`: choose terminal stream for decoded TX bytes (non-PTY only)
 - `-o, --serial-out <dest>`: send decoded TX bytes to `stdout`, `stderr`, `-`, `none`, or a file path
   - In `--pty` mode, this is a **mirror** (PTY remains primary)
@@ -222,7 +223,7 @@ If your goal is a clean serial capture, prefer `--serial-out <file>` (optionally
   - `s` / `l`: save/load machine state (`--state-file`)
   - `f`: set state filename (interactive prompt)
   - `b` / `g`: save/load RAM banks (`--ram-file`)
-  - `m`: set RAM filename (interactive prompt)
+  - `M`: set RAM filename (interactive prompt)
   - `a`: set/attach cassette filename (interactive prompt)
   - `P` / `R` / `K`: cassette Play / Record / stop
   - `W` / `J`: cassette Rewind / fast-forward 10s
@@ -233,7 +234,7 @@ If your goal is a clean serial capture, prefer `--serial-out <file>` (optionally
   - `?` / `h`: help
   - `q`: quit
 
-- PTY mode (`--pty`): defaults to a **read-only control deck** (panel keys are direct). Press **Ctrl-P Ctrl-P** to toggle local serial typing. (`p` toggles the panel; `u` toggles UI mode.)
+- PTY mode (`--pty`): defaults to a **read-only control deck** (panel keys are direct). Press **Ctrl-P t** to toggle local serial typing. (`p` toggles the panel; `u` toggles UI mode.)
 
 See also:
 - `docs/persistence.md`
