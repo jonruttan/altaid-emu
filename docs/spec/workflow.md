@@ -60,7 +60,6 @@ Optional: run tests with an instrumentation wrapper (for example valgrind or
 lldb):
 
 - `make test-wrapped-all`
-Optional sanity check (ensures the runner owns `main()`):
 
 ## Release notes
 
