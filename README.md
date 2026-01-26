@@ -55,18 +55,16 @@ make
 
 ### 1a) Tests (optional)
 
-Tests use the author's **test-runner** harness (git submodule at `tests/test-runner`).
+Tests use **test-runner** harness (git submodule at `tests/test-runner`).
 
 ```sh
 git submodule update --init --recursive
-make tests
-# Instrumented run (valgrind/lldb/etc. via WRAPPER):
-make tests-wrapped
+make test-unit
+make test-e2e
 # Run a single spec file:
-TESTS=tests/src/smoke.spec.c make tests
-
-# Note: smoke.spec.c is an end-to-end smoke test. It uses system() to run
-#       ./altaid-emu --help and may build the binary if it is missing.
+TESTS=tests/src/smoke.spec.c make test
+# Instrumented run (valgrind/lldb/etc. via WRAPPER):
+make test-wrapped
 ```
 
 ### Troubleshooting (common first-run issues)

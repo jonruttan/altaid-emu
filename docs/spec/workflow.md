@@ -44,15 +44,15 @@ For each slice:
   - `TEST_RUNNER` names the harness script; `WRAPPER` is an optional execution
     wrapper (valgrind/lldb/etc.). Do not rename/remove these without an explicit
     request.
-  - Do not remove/rename `make tests` / `make tests-wrapped` or change their
+  - Do not remove/rename `make test` / `make test-wrapped` or change their
     meaning without an explicit request.
 - Run tests before shipping the slice:
-  - `make tests`
+  - `make test-unit && make test-e2e`
 
 Optional: run tests with an instrumentation wrapper (for example valgrind or
 lldb):
 
-- `make tests-wrapped`
+- `make test-unit-wrapped`
 Optional sanity check (ensures the runner owns `main()`):
 
 ## Release notes
@@ -101,7 +101,7 @@ Then:
 - Choose the next smallest high-value slice.
 - Implement exactly one slice.
 - Update specs per docs/spec/workflow.md.
-- Ensure `make tests` passes (or report failures).
+- Ensure `make test-unit && make test-e2e` passes (or report failures).
 - Output a tarball named: altaid-emu-sliceNN-<brief-description>.tar.xz
 - The tarball MUST contain a single top-level directory named altaid-emu/ (no loose files at archive root).
 ```

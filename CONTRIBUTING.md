@@ -20,17 +20,18 @@ make clean && make
 Run the test suite:
 
 ```sh
-make tests
+make test-unit
+make test-e2e
 ```
 
 Optional: run tests under an instrumentation wrapper (for example valgrind or lldb):
 
 ```sh
-make tests-wrapped
+make test-unit-wrapped
 ```
 
 If you add fidelity fixes or change behavior, please add targeted regression tests
-under `tests/src/`.
+under `tests/unit/` and `tests/e2e`.
 
 ## Style
 

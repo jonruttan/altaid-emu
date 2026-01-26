@@ -14,28 +14,29 @@ git submodule update --init --recursive
 ## Run
 
 ```sh
-make tests
+make test-unit
+make test-e2e
 ```
 
-Note: `tests/src/smoke.spec.c` is an end-to-end smoke test. It uses
+Note: `tests/e2e/smoke.spec.c` is an end-to-end smoke test. It uses
 `system()` to run `./altaid-emu --help` and may build the binary if it is
 missing.
 
 To run with an instrumentation wrapper (for example valgrind or lldb):
 
 ```sh
-make tests-wrapped
+make test-unit-wrapped
 ```
 
 You can override the wrapper explicitly:
 
 ```sh
-WRAPPER='valgrind --leak-check=full' make tests-wrapped
-WRAPPER='lldb --batch -o run --' make tests-wrapped
+WRAPPER='valgrind --leak-check=full' make test-wrapped
+WRAPPER='lldb --batch -o run --' make test-wrapped
 ```
 
 You can also run a single spec file:
 
 ```sh
-TESTS=tests/src/smoke.spec.c make tests
+TESTS=tests/unit/smoke.spec.c make test
 ```
