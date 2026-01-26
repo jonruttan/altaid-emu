@@ -13,8 +13,8 @@ prevent regressions, or simplify contribution.
 
 - `docs/` : documentation for humans (usage + contributor notes).
   - User docs: memory/port map, cassette, persistence, troubleshooting.
-  - Contributor docs: `docs/spec/style.md`, `docs/architecture.md`,
-    `docs/spec/release.md`.
+  - Contributor docs: `docs/spec/style.md`, `docs/spec/commit-guidelines.md`,
+    `docs/architecture.md`, `docs/spec/release.md`.
 - `docs/spec/` : product specs (current + v1) and workflow for maintaining them.
 
 ## Specs and single source of truth
