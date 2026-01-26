@@ -138,8 +138,6 @@ concerns.
 - Add one-off harness code inside the emulator project to paper over missing
   test-runner functionality.
 
-**See also:** DEC-0026 in `docs/spec/project_decisions.md`.
-
 ---
 
 ### Keep shared types in neutral headers
@@ -173,23 +171,6 @@ core settings, calling it "Emu*" smears responsibilities and invites misuse.
 
 **Don't:**
 - Use narrow names for mixed-scope data structures.
-
-
----
-
-### Slice numbers are coordination, not correctness
-
-**Intent:** Use slice numbers to keep work ordered and easy to reference.
-
-**Rationale:** The number is a bookkeeping tool; correctness is enforced by tests
-and specs.
-
-**Do:**
-- Keep slice numbers monotonic for continuity.
-- Track the current slice number in `docs/spec/workflow.md`.
-
-**Don't:**
-- Treat slice numbers as a semantic version.
 
 ## Changelog
 
