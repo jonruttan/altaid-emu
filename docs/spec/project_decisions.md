@@ -56,6 +56,8 @@ and maintenance.
 - Consequences:
   - Lower documentation maintenance overhead.
   - Fewer stale/conflicting instructions.
+- References:
+  - `docs/spec/design_philosophy.md` (Single source of truth for procedures)
 
 ---
 
@@ -146,3 +148,5 @@ and maintenance.
 - Consequences:
   - Lower maintenance overhead and clearer separation of concerns.
   - Testing infrastructure improvements benefit all dependent projects.
+- References:
+  - `docs/spec/design_philosophy.md` (Improve upstream test tools)

@@ -49,6 +49,8 @@ keep specs aligned with reality.
 
 **Rationale:** Repeated procedures drift and create stale/conflicting guidance.
 
+**See also:** DEC-0021 in `docs/spec/project_decisions.md`.
+
 **Do:**
 - Keep the full procedure in one canonical place.
 - Elsewhere, paraphrase briefly and point to the canonical place.
@@ -135,6 +137,8 @@ concerns.
 **Don't:**
 - Add one-off harness code inside the emulator project to paper over missing
   test-runner functionality.
+
+**See also:** DEC-0026 in `docs/spec/project_decisions.md`.
 
 ---
 
