@@ -108,6 +108,7 @@ The emulator provides a “panel prefix” key chord. When the prefix is seen, t
 - `Ctrl-P p` : toggle panel visibility (upper section)
 - `Ctrl-P u` : toggle full-screen UI mode (if interactive TTY)
 - `Ctrl-P i` : toggle serial input read-only
+- `Ctrl-P t` : toggle PTY local keyboard input (PTY mode)
 - `Ctrl-P c` : toggle text panel compact/verbose (text mode)
 - `Ctrl-P d` : emit a one-shot panel snapshot (text mode)
 - `Ctrl-P h` or `Ctrl-P ?` : show help
