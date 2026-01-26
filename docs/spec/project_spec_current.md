@@ -11,7 +11,8 @@ This document is the **single source of truth** for what this repository’s emu
 
 - The **v1.0 aspirations** live in `docs/spec/project_spec_v1.md` (roadmap/target behavior).
 - When the repo changes behavior, update **this** document first, then adjust any relevant docs/README snippets.
-- Verification lives in `tests/src/*.spec.c` (preferred) and/or the README “golden path” examples.
+- Verification lives in `tests/unit/*.spec.c` (preferred), `tests/e2e/*.spec.c`,
+  and/or the README “golden path” examples.
 
 - **Normative language**: “MUST/SHOULD/MAY” is intentional.
 - **Scope**: emulator behavior + CLI/TUI/panel + cassette + persistence + build/release expectations.

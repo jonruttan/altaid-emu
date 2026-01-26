@@ -62,7 +62,7 @@ git submodule update --init --recursive
 make test-unit
 make test-e2e
 # Run a single spec file:
-TESTS=tests/src/smoke.spec.c make test
+TESTS=tests/e2e/smoke.spec.c make test
 # Instrumented run (valgrind/lldb/etc. via WRAPPER):
 make test-wrapped
 ```
@@ -85,7 +85,7 @@ make test-wrapped
   - Check that test files exist:
 
     ```sh
-    ls -la tests/src/*.spec.c
+    ls -la tests/unit/*.spec.c tests/e2e/*.spec.c
     ```
 
 - **UI looks garbled / borders don’t line up**

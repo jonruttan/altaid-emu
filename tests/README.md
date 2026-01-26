@@ -38,5 +38,5 @@ WRAPPER='lldb --batch -o run --' make test-wrapped
 You can also run a single spec file:
 
 ```sh
-TESTS=tests/unit/smoke.spec.c make test
+TESTS=tests/unit/timeutil.spec.c make test
 ```

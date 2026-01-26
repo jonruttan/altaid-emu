@@ -39,8 +39,8 @@ For each slice:
 - All new or modified code MUST include unit tests, unless the slice explicitly
   documents why tests are not practical for that change.
 - Test harness invariants (do not break):
-  - `tests/src/*.spec.c` files MUST NOT define `main()` (the test-runner provides
-    the entry point).
+  - `tests/unit/*.spec.c` and `tests/e2e/*.spec.c` files MUST NOT define
+    `main()` (the test-runner provides the entry point).
   - `TEST_RUNNER` names the harness script; `WRAPPER` is an optional execution
     wrapper (valgrind/lldb/etc.). Do not rename/remove these without an explicit
     request.
