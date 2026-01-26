@@ -4,9 +4,9 @@
  * Unit tests for time helpers.
  */
 
-#include "test-runner.h"
-
 #include "timeutil.c"
+
+#include "test-runner.h"
 
 static char *test_emu_tick_to_ns_basic(void)
 {

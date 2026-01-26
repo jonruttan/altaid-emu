@@ -19,8 +19,9 @@ uint64_t monotonic_ns(void)
 {
 	struct timespec ts;
 
-	if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0)
-	return 0;
+	if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
+		return 0;
+	}
 
 	return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
 }
@@ -31,8 +32,9 @@ uint64_t emu_tick_to_ns(uint64_t tick, uint32_t hz)
 	uint64_t r;
 
 	/* tick is in CPU cycles (t-states). */
-	if (hz == 0)
-	return 0;
+	if (hz == 0) {
+		return 0;
+	}
 
 	/*
 	* Avoid overflowing tick*1e9 in 64-bit by splitting into quotient and
@@ -48,8 +50,9 @@ void sleep_ns(uint64_t ns)
 {
 	struct timespec req;
 
-	if (ns == 0)
-	return;
+	if (ns == 0) {
+		return;
+	}
 
 	req.tv_sec = (time_t)(ns / 1000000000ull);
 	req.tv_nsec = (long)(ns % 1000000000ull);
@@ -63,10 +66,13 @@ int write_full(int fd, const void *buf, size_t len)
 	const uint8_t *p;
 	size_t left;
 
-	if (fd < 0)
-	return -1;
-	if (!buf || len == 0)
-	return 0;
+	if (fd < 0) {
+		return -1;
+	}
+
+	if ( ! buf || len == 0) {
+		return 0;
+	}
 
 	p = buf;
 	left = len;
@@ -79,8 +85,9 @@ int write_full(int fd, const void *buf, size_t len)
 			continue;
 		}
 
-		if (n < 0 && errno == EINTR)
-		continue;
+		if (n < 0 && errno == EINTR) {
+			continue;
+		}
 
 		if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
 			/* Avoid a busy-spin if the fd is non-blocking. */
@@ -100,12 +107,13 @@ void sleep_or_wait_input_ns(uint64_t ns, bool use_pty, int pty_fd, bool headless
 	int maxfd = -1;
 	struct timeval tv;
 
-	if (ns == 0)
-	return;
+	if (ns == 0) {
+		return;
+	}
 
 	FD_ZERO(&rfds);
 
-	if (!headless) {
+	if ( ! headless) {
 		FD_SET(0, &rfds);
 		maxfd = 0;
 	}
