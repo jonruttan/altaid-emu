@@ -2,7 +2,6 @@
 
 This file is the root of the AI pathway. It contains only AI-specific rules.
 Shared workflow rules live in `docs/spec/workflow.md`.
-For human contributors, start with `CONTRIBUTING.md`.
 
 ## AI-only rules
 
