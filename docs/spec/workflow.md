@@ -1,5 +1,8 @@
 # Workflow
 
+This document is the shared workflow for humans and AI agents. AI-specific
+behavioral rules live in `AGENTS.md`.
+
 This repo is maintained in **small, reviewable slices**.
 
 The goal is to keep the project **small and shippable**.
