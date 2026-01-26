@@ -47,12 +47,12 @@ For each slice:
   - Do not remove/rename `make test` / `make test-wrapped` or change their
     meaning without an explicit request.
 - Run tests before shipping the slice:
-  - `make test-unit && make test-e2e`
+  - `make test-all`
 
 Optional: run tests with an instrumentation wrapper (for example valgrind or
 lldb):
 
-- `make test-unit-wrapped`
+- `make test-all-wrapped`
 Optional sanity check (ensures the runner owns `main()`):
 
 ## Release notes
@@ -101,7 +101,7 @@ Then:
 - Choose the next smallest high-value slice.
 - Implement exactly one slice.
 - Update specs per docs/spec/workflow.md.
-- Ensure `make test-unit && make test-e2e` passes (or report failures).
+- Ensure `make test-all` passes (or report failures).
 - Output a tarball named: altaid-emu-sliceNN-<brief-description>.tar.xz
 - The tarball MUST contain a single top-level directory named altaid-emu/ (no loose files at archive root).
 ```

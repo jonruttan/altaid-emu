@@ -27,7 +27,7 @@ Guidelines:
 - [ ] Ensure `main` is green in CI.
 - [ ] Run locally:
   - [ ] `make clean && make`
-  - [ ] `make test-unit && make test-e2e`
+  - [ ] `make test-all`
 
 ### 2) Update version + notes
 

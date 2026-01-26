@@ -59,12 +59,12 @@ Tests use **test-runner** harness (git submodule at `tests/test-runner`).
 
 ```sh
 git submodule update --init --recursive
-make test-unit
-make test-e2e
+make test-all
 # Run a single spec file:
 TESTS=tests/e2e/smoke.spec.c make test
 # Instrumented run (valgrind/lldb/etc. via WRAPPER):
 make test-wrapped
+make test-all-wrapped
 ```
 
 ### Troubleshooting (common first-run issues)

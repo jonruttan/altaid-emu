@@ -14,8 +14,7 @@ git submodule update --init --recursive
 ## Run
 
 ```sh
-make test-unit
-make test-e2e
+make test-all
 ```
 
 Note: `tests/e2e/smoke.spec.c` is an end-to-end smoke test. It uses
@@ -25,7 +24,7 @@ missing.
 To run with an instrumentation wrapper (for example valgrind or lldb):
 
 ```sh
-make test-unit-wrapped
+make test-all-wrapped
 ```
 
 You can override the wrapper explicitly:
