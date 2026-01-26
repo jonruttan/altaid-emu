@@ -14,9 +14,9 @@ low maintenance overhead, and spec-truthfulness.
 
 ## Required reading order (do this first for any task)
 
-1) docs/spec/workflow.md  
-2) docs/spec/project_spec_current.md  
-3) docs/spec/project_spec_v1.md  
+1) docs/spec/workflow.md
+2) docs/spec/project_spec_current.md
+3) docs/spec/project_spec_v1.md
 Then consult as-needed:
 - docs/spec/design_philosophy.md
 - docs/spec/project_decisions.md
