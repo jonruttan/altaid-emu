@@ -168,3 +168,4 @@ These are *user-facing* checks that SHOULD pass on every release candidate:
 5. Ctrl-P tape commands work with an attached cassette image.
 6. State save/load round-trips deterministically (load -> same behavior, including tick counters if shown).
 7. RAM save/load round-trips (RAM changes visible after load).
+8. PTY mode toggles local input with `--pty-input` or Ctrl-P t.
