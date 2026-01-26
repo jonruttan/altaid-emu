@@ -24,7 +24,7 @@ missing.
 To run with an instrumentation wrapper (for example valgrind or lldb):
 
 ```sh
-make test-all-wrapped
+make test-wrapped-all
 ```
 
 You can override the wrapper explicitly:

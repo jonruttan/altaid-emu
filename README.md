@@ -64,7 +64,7 @@ make test-all
 TESTS=tests/e2e/smoke.spec.c make test
 # Instrumented run (valgrind/lldb/etc. via WRAPPER):
 make test-wrapped
-make test-all-wrapped
+make test-wrapped-all
 ```
 
 ### Troubleshooting (common first-run issues)

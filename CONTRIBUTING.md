@@ -26,7 +26,7 @@ make test-all
 Optional: run tests under an instrumentation wrapper (for example valgrind or lldb):
 
 ```sh
-make test-all-wrapped
+make test-wrapped-all
 ```
 
 If you add fidelity fixes or change behavior, please add targeted regression tests

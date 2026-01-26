@@ -52,16 +52,16 @@ test:
 test-unit: TESTS=$(TEST_PATH)/unit
 test-unit: test
 
-test-unit-wrapped: TESTS=$(TEST_PATH)/unit
-test-unit-wrapped: test-wrapped
+test-wrapped-unit: TESTS=$(TEST_PATH)/unit
+test-wrapped-unit: test-wrapped
 
 test-e2e: TESTS=$(TEST_PATH)/e2e
 test-e2e: altaid-emu test
 
-test-e2e-wrapped: TESTS=$(TEST_PATH)/e2e
-test-e2e-wrapped: altaid-emu test-wrapped
+test-wrapped-e2e: TESTS=$(TEST_PATH)/e2e
+test-wrapped-e2e: altaid-emu test-wrapped
 
 test-all: test-unit test-e2e
-test-all-wrapped: test-unit-wrapped test-e2e-wrapped
+test-wrapped-all: test-wrapped-unit test-wrapped-e2e
 
-.PHONY: test-wrapped test test-unit test-unit-wrapped test-e2e test-e2e-wrapped test-all test-all-wrapped
+.PHONY: test-wrapped test test-unit test-wrapped-unit test-e2e test-wrapped-e2e test-all test-wrapped-all
