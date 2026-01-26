@@ -24,15 +24,15 @@ Each commit message consists of:
 <footer>
 ```
 
-### Scope (optional)
+### Scope (strongly suggested)
 
 Scope goes in parentheses after the type and identifies *where* the change
 happened (subsystem, module, feature area, etc.).
 
-- Scope is **strongly suggested** for most commits.
+- Scope is **strongly suggested** and should be treated as the default.
 - Omit scope only with a good reason (e.g., truly cross-cutting change where a
   single scope would be misleading).
-- Pparentheses are optional when omitting scope.
+- Parentheses are optional when omitting scope.
 
 Examples:
 
