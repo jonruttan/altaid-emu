@@ -49,6 +49,10 @@ Before submitting a PR, run:
 ./tools/check_style.sh
 ```
 
+## Commit messages
+
+Please follow the commit message guidelines in `docs/spec/commit-guidelines.md`.
+
 ## Clean tree
 
 Please do not commit generated artifacts (object files, binaries, Python caches).
