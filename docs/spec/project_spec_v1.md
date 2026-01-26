@@ -48,6 +48,32 @@ V1-BLD-005 (SHOULD; Status: Done): A `make dist` or `tools/dist.sh` workflow SHO
 # Testing coverage
 
 V1-TST-001 (SHOULD; Status: Planned): The repo SHOULD include unit and end-to-end tests covering core subsystems (CPU, serial, cassette, persistence, UI).
+V1-TST-002 (SHOULD; Status: Planned): The testing rollout MUST be tracked as a phased, sliceable plan so progress can resume across sessions without losing context.
+
+## Test rollout plan (sliceable)
+
+Each slice should deliver one small, reviewable test increment (one unit test file or one e2e check), and record completion in this plan.
+
+### Phase 1: Deterministic unit tests (no filesystem, no wall-clock)
+
+- V1-TST-101 (Planned): Serial init defaults + tick math.
+- V1-TST-102 (Planned): Serial RX queue behavior (enqueue/level timing).
+- V1-TST-103 (Planned): Serial TX decode (start bit -> emitted byte).
+- V1-TST-104 (Planned): Cassette lifecycle (init/stop/status) without file I/O.
+- V1-TST-105 (Planned): State I/O header validation (bad magic/version) using in-memory helpers.
+
+### Phase 2: Focused CLI e2e checks (fast, deterministic)
+
+- V1-TST-201 (Planned): `--help` exits 0 (smoke baseline).
+- V1-TST-202 (Planned): `--version` exits 0.
+- V1-TST-203 (Planned): Invalid flag combinations exit non-zero with usage (e.g., `--cass-play` without `--cass`).
+
+### Phase 3: Subsystem-by-subsystem expansion
+
+- V1-TST-301 (Planned): CPU opcode micro-tests (small fixed set).
+- V1-TST-302 (Planned): Persistence round-trip (state + RAM) via temp files.
+- V1-TST-303 (Planned): Cassette record/play round-trip with known transcript.
+- V1-TST-304 (Planned): UI routing invariants (stdout/stderr separation).
 
 # First-run experience
 
