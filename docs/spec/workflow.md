@@ -37,6 +37,7 @@ For each slice:
   v1 document to mark/adjust the item.
 - If you change module boundaries or responsibilities, update
   `docs/architecture.md`.
+- When preparing commits, follow `docs/spec/commit-guidelines.md`.
 - All new or modified code MUST include unit tests, unless the slice explicitly
   documents why tests are not practical for that change.
 - Test harness invariants (do not break):

@@ -20,6 +20,7 @@ low maintenance overhead, and spec-truthfulness.
 Then consult as-needed:
 - docs/spec/design_philosophy.md
 - docs/spec/project_decisions.md
+- docs/spec/commit-guidelines.md (when preparing commits)
 - docs/spec/style.md
 - docs/architecture.md (when moving responsibilities/boundaries)
 
