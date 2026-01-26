@@ -49,17 +49,17 @@ test-wrapped:
 test:
 	@WRAPPER=command TESTS=$(TESTS) $(MAKE) test-wrapped
 
-test-unit: TESTS=$(TEST_PATH)/unit
-test-unit: test
+test-unit:
+	@TESTS=$(TEST_PATH)/unit $(MAKE) test
 
-test-wrapped-unit: TESTS=$(TEST_PATH)/unit
-test-wrapped-unit: test-wrapped
+test-wrapped-unit:
+	@TESTS=$(TEST_PATH)/unit $(MAKE) test-wrapped
 
-test-e2e: TESTS=$(TEST_PATH)/e2e
-test-e2e: altaid-emu test
+test-e2e: altaid-emu
+	@TESTS=$(TEST_PATH)/e2e $(MAKE) test
 
-test-wrapped-e2e: TESTS=$(TEST_PATH)/e2e
-test-wrapped-e2e: altaid-emu test-wrapped
+test-wrapped-e2e: altaid-emu
+	@TESTS=$(TEST_PATH)/e2e $(MAKE) test-wrapped
 
 test-all: test-unit test-e2e
 test-wrapped-all: test-wrapped-unit test-wrapped-e2e
