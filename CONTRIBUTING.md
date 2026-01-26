@@ -4,7 +4,6 @@ Thanks for contributing!
 
 ## Ground rules
 
-- Follow the slice workflow in `docs/spec/workflow.md`.
 - Keep changes small and reviewable.
 - Prefer portability (macOS + Linux). Avoid non-POSIX APIs unless guarded.
 - When changing I/O behavior, update `docs/port-map.md` and/or `docs/memory-map.md`.
