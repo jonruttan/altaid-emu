@@ -61,20 +61,6 @@ and maintenance.
 
 ---
 
-### DEC-0022: Track the current slice number in workflow
-
-- Date: 2026-01-21
-- Status: Accepted
-- Context:
-  - Slice numbers are used for ordering and naming tarballs, and for continuity
-    across chats.
-- Decision:
-  - Track the current slice number in `docs/spec/workflow.md`.
-- Consequences:
-  - A single, repo-local place to pick up where we left off.
-
----
-
 ### DEC-0023: Move emulator configuration out of the CLI header
 
 - Date: 2026-01-23
