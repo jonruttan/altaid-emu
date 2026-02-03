@@ -80,6 +80,26 @@ costs.
 
 ---
 
+### Prefer portable, defensive APIs
+
+**Intent:** Keep core logic adaptable across platforms and future host changes.
+
+**Rationale:** Platform assumptions leak quickly; defensive contracts and clear
+errors make subsystems easier to evolve and test.
+
+**Do:**
+- Validate inputs at module boundaries and return meaningful error values.
+- Keep platform-specific behavior isolated in small, well-named helpers.
+- Use explicit-width types for serialized or emulated data, preferring the
+  smallest width that safely expresses the domain (for example, `uint8_t`
+  over `uint64_t`).
+
+**Don't:**
+- Assume host-specific defaults (endianness, `int` size, syscall behavior).
+- Hide failures behind silent no-ops when a caller can act on an error.
+
+---
+
 ### Prefer explicit context over mutable globals
 
 **Intent:** Keep state and dependencies explicit so the code remains testable,
