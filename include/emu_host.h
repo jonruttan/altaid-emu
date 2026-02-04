@@ -35,7 +35,7 @@ struct EmuHost {
 
 	uint64_t	next_panel_tick;
 
-	uint64_t	wall_start_ns;
+	uint32_t	wall_start_usec;
 	uint64_t	emu_start_tick;
 };
 

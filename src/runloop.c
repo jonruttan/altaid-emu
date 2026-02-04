@@ -431,20 +431,20 @@ bool tui_active)
 
 static void realtime_throttle(const struct EmuHost *host, const struct EmuCore *core)
 {
-	uint64_t now_wall;
-	uint64_t emu_ns;
-	uint64_t wall_elapsed;
-	uint64_t delta;
+	uint32_t now_wall;
+	uint32_t emu_usec;
+	uint32_t wall_elapsed;
+	uint32_t delta;
 
 	if (!host->cfg.realtime) return;
 
-	now_wall = monotonic_ns();
-	wall_elapsed = now_wall - host->wall_start_ns;
-	emu_ns = emu_tick_to_ns(core->ser.tick - host->emu_start_tick, core->cfg.cpu_hz);
-	if (emu_ns <= wall_elapsed) return;
+	now_wall = monotonic_usec();
+	wall_elapsed = now_wall - host->wall_start_usec;
+	emu_usec = emu_tick_to_usec(core->ser.tick - host->emu_start_tick, core->cfg.cpu_hz);
+	if (emu_usec <= wall_elapsed) return;
 
-	delta = emu_ns - wall_elapsed;
-	sleep_or_wait_input_ns(delta, host->cfg.use_pty, host->pty_fd,
+	delta = emu_usec - wall_elapsed;
+	sleep_or_wait_input_usec(delta, host->cfg.use_pty, host->pty_fd,
 	host->cfg.headless);
 }
 

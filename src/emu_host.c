@@ -246,7 +246,7 @@ void emu_host_epoch_reset(struct EmuHost *host, const struct EmuCore *core)
 {
 	if (!host || !core) return;
 
-	host->wall_start_ns = monotonic_ns();
+	host->wall_start_usec = monotonic_usec();
 	host->emu_start_tick = core->ser.tick;
 	host->next_panel_tick = core->ser.tick;
 }

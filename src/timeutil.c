@@ -15,18 +15,46 @@
 #include <time.h>
 #include <unistd.h>
 
-uint64_t monotonic_ns(void)
+static uint32_t monotonic_now_usec(void)
 {
+#ifdef TIMEUTIL_USE_GETTIMEOFDAY
+	struct timeval tv;
+
+	if (gettimeofday(&tv, NULL) != 0) {
+		return 0;
+	}
+
+	return (uint32_t)((uint64_t)tv.tv_sec * 1000000ull + (uint64_t)tv.tv_usec);
+#else
 	struct timespec ts;
 
 	if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
 		return 0;
 	}
 
-	return (uint64_t)ts.tv_sec * 1000000000ull + (uint64_t)ts.tv_nsec;
+	return (uint32_t)((uint64_t)ts.tv_sec * 1000000ull + (uint64_t)ts.tv_nsec / 1000ull);
+#endif
 }
 
-uint64_t emu_tick_to_ns(uint64_t tick, uint32_t hz)
+uint32_t monotonic_usec(void)
+{
+	static uint32_t base_usec;
+	static bool base_init = false;
+	uint32_t now_usec;
+
+	now_usec = monotonic_now_usec();
+	if (!base_init && now_usec != 0) {
+		base_usec = now_usec;
+		base_init = true;
+	}
+	if (!base_init) {
+		return 0;
+	}
+
+	return now_usec - base_usec;
+}
+
+uint32_t emu_tick_to_usec(uint64_t tick, uint32_t hz)
 {
 	uint64_t q;
 	uint64_t r;
@@ -37,25 +65,25 @@ uint64_t emu_tick_to_ns(uint64_t tick, uint32_t hz)
 	}
 
 	/*
-	* Avoid overflowing tick*1e9 in 64-bit by splitting into quotient and
-	* remainder: (tick/hz)*1e9 + (tick%hz)*1e9/hz.
-	*/
+	 * Avoid overflowing tick*1e6 in 64-bit by splitting into quotient and
+	 * remainder: (tick/hz)*1e6 + (tick%hz)*1e6/hz.
+	 */
 	q = tick / (uint64_t)hz;
 	r = tick % (uint64_t)hz;
 
-	return q * 1000000000ull + (r * 1000000000ull) / (uint64_t)hz;
+	return (uint32_t)(q * 1000000ull + (r * 1000000ull) / (uint64_t)hz);
 }
 
-void sleep_ns(uint64_t ns)
+void sleep_usec(uint32_t usec)
 {
 	struct timespec req;
 
-	if (ns == 0) {
+	if (usec == 0) {
 		return;
 	}
 
-	req.tv_sec = (time_t)(ns / 1000000000ull);
-	req.tv_nsec = (long)(ns % 1000000000ull);
+	req.tv_sec = (time_t)(usec / 1000000u);
+	req.tv_nsec = (long)((usec % 1000000u) * 1000u);
 
 	while (nanosleep(&req, &req) == -1 && errno == EINTR)
 	;
@@ -91,7 +119,7 @@ int write_full(int fd, const void *buf, size_t len)
 
 		if (n < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) {
 			/* Avoid a busy-spin if the fd is non-blocking. */
-			sleep_ns(1000000ull);
+			sleep_usec(1000ull);
 			continue;
 		}
 
@@ -101,13 +129,13 @@ int write_full(int fd, const void *buf, size_t len)
 	return 0;
 }
 
-void sleep_or_wait_input_ns(uint64_t ns, bool use_pty, int pty_fd, bool headless)
+void sleep_or_wait_input_usec(uint32_t usec, bool use_pty, int pty_fd, bool headless)
 {
 	fd_set rfds;
 	int maxfd = -1;
 	struct timeval tv;
 
-	if (ns == 0) {
+	if (usec == 0) {
 		return;
 	}
 
@@ -126,11 +154,11 @@ void sleep_or_wait_input_ns(uint64_t ns, bool use_pty, int pty_fd, bool headless
 		}
 	}
 
-	tv.tv_sec = (time_t)(ns / 1000000000ull);
-	tv.tv_usec = (suseconds_t)((ns % 1000000000ull) / 1000ull);
+	tv.tv_sec = (time_t)(usec / 1000000u);
+	tv.tv_usec = (suseconds_t)(usec % 1000000u);
 
 	if (maxfd < 0) {
-		sleep_ns(ns);
+		sleep_usec(usec);
 		return;
 	}
 
