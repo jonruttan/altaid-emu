@@ -85,6 +85,14 @@ Rules:
 - Do not end with a period
 - Keep it short, clear, and specific
 
+Practical workflow (recommended):
+
+1) Summarize the slice in 1-2 bullets of what changed (not why).
+2) Extract the top-level themes from those bullets.
+3) Write a subject that covers all themes (use an umbrella phrase if needed).
+4) If the subject cannot cover all themes without becoming vague, split the
+   slice or ask for guidance before committing.
+
 Examples:
 
 - `fix(parser): handle empty config file`
