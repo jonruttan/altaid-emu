@@ -120,8 +120,10 @@ void sleep_or_wait_input_ns(uint64_t ns, bool use_pty, int pty_fd, bool headless
 
 	if (use_pty && pty_fd >= 0) {
 		FD_SET(pty_fd, &rfds);
-		if (pty_fd > maxfd)
-		maxfd = pty_fd;
+
+		if (pty_fd > maxfd) {
+			maxfd = pty_fd;
+		}
 	}
 
 	tv.tv_sec = (time_t)(ns / 1000000000ull);
