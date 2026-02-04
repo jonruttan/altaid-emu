@@ -33,6 +33,7 @@ slice.
 For each slice:
 
 - Keep changes small and focused.
+- Do not stage or commit unless the user explicitly says "approved".
 - If you change behavior or defaults, update **at least one** of:
   - `docs/spec/project_spec_current.md`
   - relevant subsystem docs (`docs/port-map.md`, `docs/memory-map.md`,
