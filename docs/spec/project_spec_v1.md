@@ -47,8 +47,8 @@ V1-BLD-005 (SHOULD; Status: Done): A `make dist` or `tools/dist.sh` workflow SHO
 
 # Testing coverage
 
-V1-TST-001 (SHOULD; Status: Planned): The repo SHOULD include unit and end-to-end tests covering core subsystems (CPU, serial, cassette, persistence, UI).
-V1-TST-002 (SHOULD; Status: Planned): The testing rollout MUST be tracked as a phased, sliceable plan so progress can resume across sessions without losing context.
+V1-TST-001 (SHOULD; Status: Done): The repo SHOULD include unit and end-to-end tests covering core subsystems (CPU, serial, cassette, persistence, UI).
+V1-TST-002 (SHOULD; Status: Done): The testing rollout MUST be tracked as a phased, sliceable plan so progress can resume across sessions without losing context.
 
 ## Test rollout plan (sliceable)
 
