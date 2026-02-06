@@ -39,6 +39,10 @@ No project-specific formatter is shipped. If you choose to auto-format locally, 
 
 A `.clang-format` file is included for convenience; use it only if it produces acceptable results for the changed code.
 
+## Tests
+
+- Assertions SHOULD use Yoda-style comparisons: `expected == actual`.
+
 ## Automated checks
 
 The repo includes a small style gate:
