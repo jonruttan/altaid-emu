@@ -23,6 +23,7 @@ static void cfg_defaults(struct Config *cfg)
 	cfg->realtime = true;
 	cfg->log_flush = true;
 	cfg->panel_text_mode = PANEL_TEXT_MODE_BURST;
+	cfg->panel_compact = true;
 	cfg->state_file = "altaid.state";
 	cfg->ram_file = "altaid.ram";
 }
