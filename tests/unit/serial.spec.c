@@ -233,6 +233,37 @@ static char *test_serial_rx_queue_drop_when_full(void)
 	return NULL;
 }
 
+static char *test_serial_tx_multi_sample_step(void)
+{
+	SerialDev s;
+	TxCapture cap;
+	int emitted;
+
+	cap.calls = 0;
+	cap.last = -1;
+
+	serial_init(&s, 2000000u, 9600u);
+	s.ticks_per_bit = 4u;
+
+	s.tick = 0;
+	(void)serial_tick_tx(&s, 1, capture_putch, &cap);
+
+	s.tick = 1;
+	(void)serial_tick_tx(&s, 0, capture_putch, &cap);
+
+	s.tick = s.tx_next_sample + (s.ticks_per_bit * 9u);
+	emitted = serial_tick_tx(&s, 1, capture_putch, &cap);
+
+	_it_should(
+		"tx samples multiple bits in one step",
+		1 == emitted
+		&& 1 == cap.calls
+		&& 0xff == (uint8_t)cap.last
+	);
+
+	return NULL;
+}
+
 static char *run_tests(void)
 {
 	_run_test(test_serial_init_defaults);
@@ -242,6 +273,7 @@ static char *run_tests(void)
 	_run_test(test_serial_tx_decode_emits_byte);
 	_run_test(test_serial_tx_stop_bit_low_no_emit);
 	_run_test(test_serial_rx_queue_drop_when_full);
+	_run_test(test_serial_tx_multi_sample_step);
 
 	return NULL;
 }
