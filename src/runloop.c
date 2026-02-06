@@ -17,6 +17,7 @@
 #include "log.h"
 #include "panel_ansi.h"
 #include "panel_text.h"
+#include "serial_routing.h"
 #include "stateio.h"
 #include "timeutil.h"
 
@@ -319,52 +320,15 @@ static void compute_serial_routing(const struct EmuHost *host, const FILE *ui_ou
 	int ui_fd;
 	int spec;
 	int over;
+	bool same_as_stdout;
 
 	ui_fd = ui_out ? fileno((FILE *)ui_out) : -1;
 	spec = host->serial_out_fd_spec;
 	over = host->serial_fd_override;
+	same_as_stdout = (ui_fd >= 0) && same_tty(ui_fd, STDOUT_FILENO);
 
-	/*
-	 * In TUI mode, keep cursor-control sequences and serial bytes on the same
-	 * terminal stream to avoid panel corruption from cross-stream interleaving.
-	 */
-	if (tui_active && ui_fd >= 0) {
-		if (spec == EMU_FD_UNSPEC || spec == STDOUT_FILENO || spec == STDERR_FILENO) {
-			*out_fd = ui_fd;
-			return;
-		}
-		if (over == STDOUT_FILENO || over == STDERR_FILENO) {
-			*out_fd = ui_fd;
-			return;
-		}
-	}
-
-	/*
-	 * Non-TUI panel snapshots are written to the UI stream (stderr by default).
-	 * If serial output defaults to stdout, the two streams can interleave out of
-	 * order on the same terminal. When the panel is enabled and the serial output
-	 * destination is unspecified, prefer the UI stream to keep output ordered.
-	 *
-	 * This preserves explicit --serial-out/--serial-fd choices.
-	 */
-	if (!tui_active && host->ui.show_panel && ui_fd >= 0) {
-		if (spec == EMU_FD_UNSPEC && over == EMU_FD_UNSPEC) {
-			if (same_tty(ui_fd, STDOUT_FILENO)) {
-				*out_fd = ui_fd;
-				return;
-			}
-		}
-	}
-
-	if (spec != EMU_FD_UNSPEC) {
-		*out_fd = spec;
-		return;
-	}
-	if (over != EMU_FD_UNSPEC) {
-		*out_fd = over;
-		return;
-	}
-	*out_fd = STDOUT_FILENO;
+	*out_fd = serial_routing_fd(ui_fd, tui_active, host->ui.show_panel,
+		spec, over, same_as_stdout);
 }
 
 static void manage_panel_lifecycle(struct EmuHost *host, bool tui_active,
