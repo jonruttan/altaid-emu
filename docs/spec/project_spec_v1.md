@@ -72,7 +72,7 @@ Each slice should deliver one small, reviewable test increment (one unit test fi
 
 - V1-TST-301 (Done): CPU opcode micro-tests (small fixed set).
 - V1-TST-302 (Done): Persistence round-trip (state + RAM) via temp files.
-- V1-TST-303 (Planned): Cassette record/play round-trip with known transcript.
+- V1-TST-303 (Done): Cassette record/play round-trip with known transcript.
 - V1-TST-304 (Planned): UI routing invariants (stdout/stderr separation).
 
 # First-run experience

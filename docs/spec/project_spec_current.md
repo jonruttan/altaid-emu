@@ -22,6 +22,7 @@ This document is the **single source of truth** for what this repository’s emu
 - Unit coverage includes CPU opcode micro-tests (small fixed set).
 - E2E coverage includes `--help` / `--version` exit-0 checks and invalid flag handling.
 - Unit coverage includes persistence round-trip for state and RAM via temp files.
+- Unit coverage includes cassette record/play round-trip with known transcript.
 
 - **Normative language**: “MUST/SHOULD/MAY” is intentional.
 - **Scope**: emulator behavior + CLI/TUI/panel + cassette + persistence + build/release expectations.

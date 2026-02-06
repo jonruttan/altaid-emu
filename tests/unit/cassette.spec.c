@@ -142,12 +142,49 @@ static char *test_cassette_ff_skips_edges(void)
 	return NULL;
 }
 
+static char *test_cassette_round_trip_playback(void)
+{
+	Cassette c;
+
+	cassette_init(&c, 2000000u);
+
+	c.attached = true;
+	cassette_start_record(&c, 0u);
+	cassette_on_out_change(&c, 5u, true);
+	cassette_on_out_change(&c, 15u, false);
+	cassette_on_out_change(&c, 30u, true);
+	cassette_stop(&c);
+
+	_it_should(
+		"recorded transcript has three durations",
+		3u == c.dur_count
+		&& 5u == c.durations[0]
+		&& 10u == c.durations[1]
+		&& 15u == c.durations[2]
+	);
+
+	cassette_start_play(&c, 100u);
+
+	_it_should(
+		"playback follows recorded edges",
+		true == cassette_in_level_at(&c, 102u)
+		&& false == cassette_in_level_at(&c, 105u)
+		&& false == cassette_in_level_at(&c, 110u)
+		&& true == cassette_in_level_at(&c, 115u)
+		&& false == cassette_in_level_at(&c, 130u)
+	);
+
+	cassette_free(&c);
+	return NULL;
+}
+
 static char *run_tests(void)
 {
 	_run_test(test_cassette_init_defaults);
 	_run_test(test_cassette_record_stop_status);
 	_run_test(test_cassette_playback_levels);
 	_run_test(test_cassette_ff_skips_edges);
+	_run_test(test_cassette_round_trip_playback);
 
 	return NULL;
 }
