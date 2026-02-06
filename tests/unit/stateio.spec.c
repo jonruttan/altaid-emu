@@ -1,8 +1,16 @@
 /*
  * stateio.spec.c
  *
- * Unit tests for state I/O helpers (header validation only).
+ * Unit tests for state I/O helpers.
  */
+
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
+#endif
 
 #include "i8080.c"
 #include "serial.c"
