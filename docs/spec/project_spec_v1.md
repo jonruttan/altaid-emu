@@ -64,9 +64,9 @@ Each slice should deliver one small, reviewable test increment (one unit test fi
 
 ### Phase 2: Focused CLI e2e checks (fast, deterministic)
 
-- V1-TST-201 (Planned): `--help` exits 0 (smoke baseline).
-- V1-TST-202 (Planned): `--version` exits 0.
-- V1-TST-203 (Planned): Invalid flag combinations exit non-zero with usage (e.g., `--cass-play` without `--cass`).
+- V1-TST-201 (Done): `--help` exits 0 (smoke baseline).
+- V1-TST-202 (Done): `--version` exits 0.
+- V1-TST-203 (Done): Invalid flag combinations exit non-zero with usage (e.g., `--cass-play` without `--cass`).
 
 ### Phase 3: Subsystem-by-subsystem expansion
 
