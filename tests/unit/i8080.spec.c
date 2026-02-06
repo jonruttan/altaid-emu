@@ -251,6 +251,121 @@ static char *test_hlt_sets_halted(void)
 	return NULL;
 }
 
+static char *test_adc_b_with_carry(void)
+{
+	I8080 cpu;
+	I8080Bus bus;
+	TestBus tb;
+
+	i8080_reset(&cpu);
+	init_bus(&bus, &tb);
+
+	cpu.a = 0x0f;
+	cpu.b = 0x01;
+	cpu.cy = true;
+	tb.mem[0x0000] = 0x88; /* ADC B */
+
+	(void)i8080_step(&cpu, &bus);
+
+	_it_should(
+		"adc b uses carry and updates flags",
+		0x11 == cpu.a
+		&& false == cpu.cy
+		&& true == cpu.ac
+		&& false == cpu.z
+		&& false == cpu.s
+		&& true == cpu.p
+	);
+
+	return NULL;
+}
+
+static char *test_sbb_b_with_borrow(void)
+{
+	I8080 cpu;
+	I8080Bus bus;
+	TestBus tb;
+
+	i8080_reset(&cpu);
+	init_bus(&bus, &tb);
+
+	cpu.a = 0x10;
+	cpu.b = 0x01;
+	cpu.cy = true;
+	tb.mem[0x0000] = 0x98; /* SBB B */
+
+	(void)i8080_step(&cpu, &bus);
+
+	_it_should(
+		"sbb b uses borrow and updates flags",
+		0x0e == cpu.a
+		&& false == cpu.cy
+		&& true == cpu.ac
+		&& false == cpu.z
+		&& false == cpu.s
+		&& false == cpu.p
+	);
+
+	return NULL;
+}
+
+static char *test_cmp_b_sets_flags(void)
+{
+	I8080 cpu;
+	I8080Bus bus;
+	TestBus tb;
+
+	i8080_reset(&cpu);
+	init_bus(&bus, &tb);
+
+	cpu.a = 0x20;
+	cpu.b = 0x20;
+	tb.mem[0x0000] = 0xB8; /* CMP B */
+
+	(void)i8080_step(&cpu, &bus);
+
+	_it_should(
+		"cmp b sets flags without changing a",
+		0x20 == cpu.a
+		&& true == cpu.z
+		&& false == cpu.cy
+		&& false == cpu.s
+		&& true == cpu.p
+		&& false == cpu.ac
+	);
+
+	return NULL;
+}
+
+static char *test_daa_adjusts_bcd(void)
+{
+	I8080 cpu;
+	I8080Bus bus;
+	TestBus tb;
+
+	i8080_reset(&cpu);
+	init_bus(&bus, &tb);
+
+	cpu.a = 0x9b;
+	cpu.cy = false;
+	cpu.ac = false;
+	tb.mem[0x0000] = 0x27; /* DAA */
+
+	(void)i8080_step(&cpu, &bus);
+
+	_it_should(
+		"daa adjusts and sets carry",
+		0x01 == cpu.a
+		&& true == cpu.cy
+		&& true == cpu.ac
+		&& false == cpu.z
+		&& false == cpu.s
+		&& false == cpu.p
+	);
+
+	return NULL;
+}
+
 static char *run_tests(void)
 {
 	_run_test(test_nop_increments_pc);
@@ -261,6 +376,10 @@ static char *run_tests(void)
 	_run_test(test_mvi_m_writes_memory);
 	_run_test(test_jmp_sets_pc);
 	_run_test(test_hlt_sets_halted);
+	_run_test(test_adc_b_with_carry);
+	_run_test(test_sbb_b_with_borrow);
+	_run_test(test_cmp_b_sets_flags);
+	_run_test(test_daa_adjusts_bcd);
 
 	return NULL;
 }
