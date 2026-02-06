@@ -9,6 +9,22 @@
 #include "test-runner.h"
 
 #include <string.h>
+#include <unistd.h>
+
+static int make_temp_path(char *out, size_t cap)
+{
+	int fd;
+
+	if (!out || cap < 32)
+		return -1;
+
+	snprintf(out, cap, "/tmp/altaid-cass-XXXXXX");
+	fd = mkstemp(out);
+	if (fd < 0)
+		return -1;
+	close(fd);
+	return 0;
+}
 
 static void record_two_pulses(Cassette *c, uint64_t start, uint64_t t1,
 			      uint64_t t2)
@@ -178,6 +194,51 @@ static char *test_cassette_round_trip_playback(void)
 	return NULL;
 }
 
+static char *test_cassette_file_round_trip(void)
+{
+	Cassette src;
+	Cassette dst;
+	char path[64];
+	bool ok;
+
+	cassette_init(&src, 2000000u);
+	src.attached = true;
+	cassette_start_record(&src, 0u);
+	cassette_on_out_change(&src, 4u, true);
+	cassette_on_out_change(&src, 9u, false);
+	cassette_on_out_change(&src, 20u, true);
+	cassette_stop(&src);
+
+	if (make_temp_path(path, sizeof(path)) != 0)
+		return "mkstemp() failed";
+
+	strncpy(src.path, path, sizeof(src.path) - 1);
+	src.path[sizeof(src.path) - 1] = '\0';
+
+	ok = cassette_save(&src);
+	_it_should(
+		"save cassette to file",
+		true == ok
+	);
+
+	cassette_init(&dst, 0u);
+	ok = cassette_open(&dst, path);
+	_it_should(
+		"load cassette from file",
+		true == ok
+		&& true == dst.attached
+		&& 3u == dst.dur_count
+		&& 4u == dst.durations[0]
+		&& 5u == dst.durations[1]
+		&& 11u == dst.durations[2]
+	);
+
+	unlink(path);
+	cassette_free(&src);
+	cassette_free(&dst);
+	return NULL;
+}
+
 static char *run_tests(void)
 {
 	_run_test(test_cassette_init_defaults);
@@ -185,6 +246,7 @@ static char *run_tests(void)
 	_run_test(test_cassette_playback_levels);
 	_run_test(test_cassette_ff_skips_edges);
 	_run_test(test_cassette_round_trip_playback);
+	_run_test(test_cassette_file_round_trip);
 
 	return NULL;
 }
