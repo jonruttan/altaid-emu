@@ -7,6 +7,7 @@
 
 #include "io.h"
 
+#include "io_sys.h"
 #include "timeutil.h"
 
 #include <errno.h>
@@ -31,7 +32,7 @@ int write_full(int fd, const void *buf, size_t len)
 	p = buf;
 	left = len;
 	while (left) {
-		ssize_t n = write(fd, p, left);
+		ssize_t n = ALTAID_IO_WRITE(fd, p, left);
 
 		if (n > 0) {
 			p += (size_t)n;

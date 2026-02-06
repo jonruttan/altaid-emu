@@ -14,6 +14,7 @@
 #include "emu_core.h"
 #include "cassette.h"
 #include "io.h"
+#include "io_sys.h"
 #include "log.h"
 #include "panel_ansi.h"
 #include "panel_text.h"
@@ -189,7 +190,7 @@ static void pty_poll_input(int pty_fd, SerialDev *ser)
 	if (r <= 0) return;
 
 	for (;;) {
-		ssize_t n = read(pty_fd, buf, sizeof(buf));
+		ssize_t n = ALTAID_IO_READ(pty_fd, buf, sizeof(buf));
 		if (n > 0) {
 			ssize_t i;
 			for (i = 0; i < n; i++)
@@ -216,7 +217,7 @@ static void stdin_poll_input(SerialDev *ser)
 	if (!ser) return;
 
 	for (;;) {
-		ssize_t n = read(STDIN_FILENO, buf, sizeof(buf));
+		ssize_t n = ALTAID_IO_READ(STDIN_FILENO, buf, sizeof(buf));
 		if (n > 0) {
 			ssize_t i;
 			for (i = 0; i < n; i++) {

@@ -2,6 +2,8 @@
 
 #include "ui.h"
 
+#include "io_sys.h"
+
 #include <fcntl.h>
 #include <stdio.h>
 #include <termios.h>
@@ -579,7 +581,7 @@ uint64_t key_hold_cycles)
 	altaid_hw_panel_tick(hw, now_tick);
 
 	for (;;) {
-		n = read(STDIN_FILENO, buf, sizeof(buf));
+		n = ALTAID_IO_READ(STDIN_FILENO, buf, sizeof(buf));
 		if (n <= 0) break;
 		for (ssize_t i = 0; i < n; i++) {
 			int ch = buf[i];
