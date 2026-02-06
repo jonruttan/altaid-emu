@@ -13,6 +13,10 @@ This document is the **single source of truth** for what this repository’s emu
 - When the repo changes behavior, update **this** document first, then adjust any relevant docs/README snippets.
 - Verification lives in `tests/unit/*.spec.c` (preferred), `tests/e2e/*.spec.c`,
   and/or the README “golden path” examples.
+- Unit coverage includes serial TX decode (start bit -> emitted byte).
+- Unit coverage includes serial RX queue drop behavior when full.
+- Unit coverage includes serial init defaults and RX frame timing.
+- Unit coverage includes serial RX idle behavior and IRQ latch persistence.
 
 - **Normative language**: “MUST/SHOULD/MAY” is intentional.
 - **Scope**: emulator behavior + CLI/TUI/panel + cassette + persistence + build/release expectations.

@@ -56,9 +56,9 @@ Each slice should deliver one small, reviewable test increment (one unit test fi
 
 ### Phase 1: Deterministic unit tests (no filesystem, no wall-clock)
 
-- V1-TST-101 (Planned): Serial init defaults + tick math.
-- V1-TST-102 (Planned): Serial RX queue behavior (enqueue/level timing).
-- V1-TST-103 (Planned): Serial TX decode (start bit -> emitted byte).
+- V1-TST-101 (Done): Serial init defaults + tick math.
+- V1-TST-102 (Done): Serial RX queue behavior (enqueue/level timing).
+- V1-TST-103 (Done): Serial TX decode (start bit -> emitted byte).
 - V1-TST-104 (Planned): Cassette lifecycle (init/stop/status) without file I/O.
 - V1-TST-105 (Planned): State I/O header validation (bad magic/version) using in-memory helpers.
 
