@@ -1,6 +1,6 @@
 #include "panel_ansi.h"
 #include "altaid_hw.h"
-#include "timeutil.h"
+#include "io.h"
 
 #include <unistd.h>
 #include <stdio.h>
@@ -910,4 +910,3 @@ uint32_t cpu_hz, uint32_t baud)
 
 	term_write_full(out, n);
 }
-

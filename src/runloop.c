@@ -13,6 +13,7 @@
 
 #include "emu_core.h"
 #include "cassette.h"
+#include "io.h"
 #include "log.h"
 #include "panel_ansi.h"
 #include "panel_text.h"
