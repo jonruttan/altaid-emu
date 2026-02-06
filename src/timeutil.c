@@ -17,15 +17,6 @@
 
 static uint32_t monotonic_now_usec(void)
 {
-#ifdef TIMEUTIL_USE_GETTIMEOFDAY
-	struct timeval tv;
-
-	if (gettimeofday(&tv, NULL) != 0) {
-		return 0;
-	}
-
-	return (uint32_t)((uint64_t)tv.tv_sec * 1000000ull + (uint64_t)tv.tv_usec);
-#else
 	struct timespec ts;
 
 	if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) {
@@ -33,7 +24,6 @@ static uint32_t monotonic_now_usec(void)
 	}
 
 	return (uint32_t)((uint64_t)ts.tv_sec * 1000000ull + (uint64_t)ts.tv_nsec / 1000ull);
-#endif
 }
 
 uint32_t monotonic_usec(void)
