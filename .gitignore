@@ -19,6 +19,9 @@ src/*.o
 # Logs
 *.log
 
+# Secrets
+.env
+
 # OS/editor junk
 .DS_Store
 ._*
