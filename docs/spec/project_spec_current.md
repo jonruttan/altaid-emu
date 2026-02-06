@@ -17,6 +17,7 @@ This document is the **single source of truth** for what this repository’s emu
 - Unit coverage includes serial RX queue drop behavior when full.
 - Unit coverage includes serial init defaults and RX frame timing.
 - Unit coverage includes serial RX idle behavior and IRQ latch persistence.
+- Unit coverage includes cassette lifecycle (init/stop/status) without file I/O.
 
 - **Normative language**: “MUST/SHOULD/MAY” is intentional.
 - **Scope**: emulator behavior + CLI/TUI/panel + cassette + persistence + build/release expectations.
