@@ -18,9 +18,9 @@
 #include "panel_ansi.h"
 #include "panel_text.h"
 #include "runloop_render.h"
+#include "runloop_time.h"
 #include "serial_routing.h"
 #include "stateio.h"
-#include "timeutil.h"
 
 #include <signal.h>
 #include <stdbool.h>
@@ -69,25 +69,6 @@ static void apply_output_streams(FILE *ui_out)
 	panel_ansi_set_output(ui_out);
 	panel_text_set_output(ui_out);
 	ui_set_output(ui_out);
-}
-
-static void realtime_throttle(const struct EmuHost *host, const struct EmuCore *core)
-{
-	uint32_t now_wall;
-	uint32_t emu_usec;
-	uint32_t wall_elapsed;
-	uint32_t delta;
-
-	if (!host->cfg.realtime) return;
-
-	now_wall = monotonic_usec();
-	wall_elapsed = now_wall - host->wall_start_usec;
-	emu_usec = emu_tick_to_usec(core->ser.tick - host->emu_start_tick, core->cfg.cpu_hz);
-	if (emu_usec <= wall_elapsed) return;
-
-	delta = emu_usec - wall_elapsed;
-	sleep_or_wait_input_usec(delta, host->cfg.use_pty, host->pty_fd,
-	host->cfg.headless);
 }
 
 int emu_host_runloop(struct EmuHost *host, struct EmuCore *core,
@@ -686,7 +667,7 @@ volatile sig_atomic_t *winch_flag)
 			}
 
 
-		realtime_throttle(host, core);
+		runloop_realtime_throttle(host, core);
 	}
 
 	return 0;
