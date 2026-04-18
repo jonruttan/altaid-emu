@@ -34,7 +34,10 @@ distclean: clean
 dist:
 	./tools/dist.sh
 
-.PHONY: all clean distclean dist
+check-style:
+	./tools/check_style.sh
+
+.PHONY: all clean distclean dist check-style
 
 test-wrapped:
 	@if [ ! -f "$(TEST_RUNNER)" ]; then \
