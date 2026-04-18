@@ -36,6 +36,7 @@ static char *test_cfg_defaults(void)
 		&& true == cfg.panel_compact
 		&& 0 == strcmp(cfg.state_file, "altaid.state")
 		&& 0 == strcmp(cfg.ram_file, "altaid.ram")
+		&& 0u == cfg.max_run_ms
 	);
 
 	return NULL;

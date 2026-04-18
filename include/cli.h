@@ -70,6 +70,12 @@ struct Config {
 	bool		show_help;
 	bool		show_version;
 	bool		debug_panel;	/* trace panel key press/release/scan events */
+
+	/*
+	 * Deterministic exit for testing: stop the runloop once the emulator
+	 * has run this many milliseconds of CPU time. 0 means "run forever".
+	 */
+	uint32_t	max_run_ms;
 };
 
 void cli_usage(const char *argv0);

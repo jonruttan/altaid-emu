@@ -446,10 +446,18 @@ volatile sig_atomic_t *winch_flag)
 	uint64_t snapshot_tick;
 	uint64_t batch_cycles;
 	uint64_t key_hold_cycles;
+	uint64_t run_deadline_tick;
+	bool have_run_deadline;
 	int term_fd_hint;
 	int serial_fd;
 
 	if (!host || !core) return 1;
+
+	have_run_deadline = (host->cfg.max_run_ms > 0);
+	run_deadline_tick = have_run_deadline
+		? (uint64_t)core->cfg.cpu_hz *
+			(uint64_t)host->cfg.max_run_ms / 1000ull
+		: 0;
 
 	memset(&pty_out, 0, sizeof(pty_out));
 	memset(&serial_out, 0, sizeof(serial_out));
@@ -506,6 +514,9 @@ volatile sig_atomic_t *winch_flag)
 
 	for (;;) {
 		if (stop_flag && *stop_flag) break;
+
+		if (have_run_deadline && core->ser.tick >= run_deadline_tick)
+			break;
 
 		if (winch_flag && *winch_flag) {
 			*winch_flag = 0;

@@ -122,6 +122,7 @@ void cli_usage(const char *argv0)
 		"  -q, --quiet               Suppress non-essential messages (still prints PTY path).\n"
 		"  -n, --headless            Do not enter raw mode and do not enable UI keybindings.\n"
 		"  -D, --debug-panel         Log front-panel press/release/scan events (pair with --log).\n"
+		"  -T, --run-ms <ms>         Exit after <ms> of emulated CPU time (0 = unlimited, default).\n"
 		"  -h, --help                Show this help and exit.\n"
 		"  -V, --version             Print version and exit.\n",
 		argv0);
@@ -167,6 +168,7 @@ int cli_parse_args(int argc, char **argv, struct Config *cfg)
 		{"realtime",      no_argument,       0, 'r'},
 		{"turbo",         no_argument,       0, 'z'},
 		{"debug-panel",   no_argument,       0, 'D'},
+		{"run-ms",        required_argument, 0, 'T'},
 		{"help",          no_argument,       0, 'h'},
 		{"version",       no_argument,       0, 'V'},
 		{0, 0, 0, 0},
@@ -180,7 +182,7 @@ int cli_parse_args(int argc, char **argv, struct Config *cfg)
 
 	for (;;) {
 		opt = getopt_long(argc, argv,
-			"hVputIEm:b:C:o:S:alqnc:LRNAF:y:x:H:rzf:kvD"
+			"hVputIEm:b:C:o:S:alqnc:LRNAF:y:x:H:rzf:kvDT:"
 			"s:J:W:M:G:B:",
 			kLongOpts, NULL);
 		if (opt == -1)
@@ -314,6 +316,10 @@ int cli_parse_args(int argc, char **argv, struct Config *cfg)
 			break;
 		case 'D':
 			cfg->debug_panel = true;
+			break;
+		case 'T':
+			if (parse_u32(optarg, &cfg->max_run_ms) < 0)
+				return -2;
 			break;
 		case 'h':
 			cfg->show_help = true;
