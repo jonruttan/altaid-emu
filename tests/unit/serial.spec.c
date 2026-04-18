@@ -212,13 +212,13 @@ static char *test_serial_rx_queue_drop_when_full(void)
 
 	serial_init(&s, 2000000u, 9600u);
 
-	for (i = 0; i < 4095u; i++) {
+	for (i = 0; i < SERIAL_RX_QUEUE_MASK; i++) {
 		serial_host_enqueue(&s, (uint8_t)i);
 	}
 
 	_it_should(
-		"queue accepts 4095 bytes",
-		4095u == s.rx_qt
+		"queue accepts capacity-1 bytes",
+		SERIAL_RX_QUEUE_MASK == s.rx_qt
 		&& 0u == s.rx_qh
 	);
 

@@ -6,6 +6,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+/*
+ * RX queue capacity in bytes. Must be a power of two: serial.c masks the
+ * head/tail indices with (SERIAL_RX_QUEUE_SIZE - 1u) as a cheap modulo.
+ */
+#define SERIAL_RX_QUEUE_SIZE 4096u
+#define SERIAL_RX_QUEUE_MASK (SERIAL_RX_QUEUE_SIZE - 1u)
+
 typedef struct {
 	/* configuration */
 	uint32_t	cpu_hz;
@@ -23,7 +30,7 @@ typedef struct {
 	uint8_t		tx_byte;
 
 	/* RX inject (host -> emulated machine) */
-	uint8_t		rx_q[4096];
+	uint8_t		rx_q[SERIAL_RX_QUEUE_SIZE];
 	uint32_t	rx_qh;
 	uint32_t	rx_qt;
 

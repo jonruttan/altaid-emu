@@ -1,7 +1,7 @@
 #include "serial.h"
 #include <string.h>
 
-static inline uint32_t q_next(uint32_t x) { return (uint32_t)((x + 1u) & 4095u); }
+static inline uint32_t q_next(uint32_t x) { return (uint32_t)((x + 1u) & SERIAL_RX_QUEUE_MASK); }
 
 void serial_init(SerialDev* s, uint32_t cpu_hz, uint32_t baud)
 {
