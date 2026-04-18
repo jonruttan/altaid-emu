@@ -5,6 +5,16 @@
  */
 
 /*
+ * timeutil.c (included via io.c below) needs clock_gettime/nanosleep,
+ * which require _POSIX_C_SOURCE >= 199309L. Define it BEFORE any system
+ * header is pulled in — on Linux glibc the features mask is latched by
+ * the first #include and cannot be widened afterwards.
+ */
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
+#endif
+
+/*
  * Force io.c to use in-memory file helpers instead of host syscalls.
  * Must be defined before io.c includes io_sys.h.
  */

@@ -7,6 +7,19 @@
  * surface (field order, formatting, units) shows up as a test failure.
  */
 
+/*
+ * fmemopen is POSIX 2008 (_POSIX_C_SOURCE >= 200809L). Define these
+ * feature-test macros BEFORE any system header is pulled in — on Linux
+ * glibc the features mask is latched by the first #include.
+ */
+#ifndef _POSIX_C_SOURCE
+#define _POSIX_C_SOURCE 200809L
+#endif
+
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+
 #include "altaid_hw.c"
 #include "panel_text.c"
 
