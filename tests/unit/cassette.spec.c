@@ -202,6 +202,187 @@ static char *test_cassette_round_trip_playback(void)
 	return NULL;
 }
 
+static int write_file(const char *path, const void *data, size_t len)
+{
+	FILE *f;
+	size_t n;
+
+	f = fopen(path, "wb");
+	if (!f)
+		return -1;
+	n = fwrite(data, 1, len, f);
+	fclose(f);
+	return (n == len) ? 0 : -1;
+}
+
+static char *test_cassette_open_missing_file_attaches_empty(void)
+{
+	Cassette c;
+	char path[64];
+	bool ok;
+
+	cassette_init(&c, 2000000u);
+
+	/* Build a unique path that definitely does not exist. */
+	if (make_temp_path(path, sizeof(path)) != 0)
+		return "mkstemp() failed";
+	unlink(path); /* delete before opening */
+
+	ok = cassette_open(&c, path);
+	_it_should(
+		"attach empty when file is missing",
+		true == ok
+		&& true == c.attached
+		&& 0u == c.dur_count
+	);
+
+	cassette_free(&c);
+	return NULL;
+}
+
+static char *test_cassette_open_truncated_header_attaches_empty(void)
+{
+	Cassette c;
+	char path[64];
+	unsigned char short_buf[4] = { 'A', 'L', 'T', 'A' };
+	bool ok;
+
+	cassette_init(&c, 2000000u);
+
+	if (make_temp_path(path, sizeof(path)) != 0)
+		return "mkstemp() failed";
+	if (write_file(path, short_buf, sizeof(short_buf)) != 0) {
+		unlink(path);
+		return "write_file() failed";
+	}
+
+	ok = cassette_open(&c, path);
+	_it_should(
+		"treat truncated header as empty attach (no crash)",
+		true == ok
+		&& true == c.attached
+		&& 0u == c.dur_count
+	);
+
+	unlink(path);
+	cassette_free(&c);
+	return NULL;
+}
+
+static char *test_cassette_open_bad_magic_attaches_empty(void)
+{
+	Cassette c;
+	char path[64];
+	unsigned char buf[sizeof(CassFileHdr)];
+	bool ok;
+
+	cassette_init(&c, 2000000u);
+
+	memset(buf, 0, sizeof(buf));
+	memcpy(buf, "BADMAGIC", 8);
+
+	if (make_temp_path(path, sizeof(path)) != 0)
+		return "mkstemp() failed";
+	if (write_file(path, buf, sizeof(buf)) != 0) {
+		unlink(path);
+		return "write_file() failed";
+	}
+
+	ok = cassette_open(&c, path);
+	_it_should(
+		"reject bad magic by attaching empty",
+		true == ok
+		&& true == c.attached
+		&& 0u == c.dur_count
+	);
+
+	unlink(path);
+	cassette_free(&c);
+	return NULL;
+}
+
+static char *test_cassette_open_wrong_version_attaches_empty(void)
+{
+	Cassette c;
+	char path[64];
+	unsigned char buf[sizeof(CassFileHdr)];
+	CassFileHdr h;
+	bool ok;
+
+	cassette_init(&c, 2000000u);
+
+	memset(&h, 0, sizeof(h));
+	memcpy(h.magic, k_magic, CAS_MAGIC_LEN);
+	h.version = 99;	/* unsupported */
+	h.cpu_hz = 2000000u;
+	h.initial_level = 1;
+	h.count = 0;
+	memcpy(buf, &h, sizeof(buf));
+
+	if (make_temp_path(path, sizeof(path)) != 0)
+		return "mkstemp() failed";
+	if (write_file(path, buf, sizeof(buf)) != 0) {
+		unlink(path);
+		return "write_file() failed";
+	}
+
+	ok = cassette_open(&c, path);
+	_it_should(
+		"reject unsupported version by attaching empty",
+		true == ok
+		&& true == c.attached
+		&& 0u == c.dur_count
+	);
+
+	unlink(path);
+	cassette_free(&c);
+	return NULL;
+}
+
+static char *test_cassette_open_truncated_durations_loads_partial(void)
+{
+	Cassette c;
+	char path[64];
+	unsigned char buf[sizeof(CassFileHdr) + 2 * sizeof(uint32_t)];
+	CassFileHdr h;
+	uint32_t d0 = 42u;
+	uint32_t d1 = 99u;
+	bool ok;
+
+	cassette_init(&c, 2000000u);
+
+	memset(&h, 0, sizeof(h));
+	memcpy(h.magic, k_magic, CAS_MAGIC_LEN);
+	h.version = 1;
+	h.cpu_hz = 2000000u;
+	h.initial_level = 1;
+	h.count = 10;	/* claim 10, provide 2 */
+	memcpy(buf, &h, sizeof(h));
+	memcpy(buf + sizeof(h), &d0, sizeof(d0));
+	memcpy(buf + sizeof(h) + sizeof(d0), &d1, sizeof(d1));
+
+	if (make_temp_path(path, sizeof(path)) != 0)
+		return "mkstemp() failed";
+	if (write_file(path, buf, sizeof(buf)) != 0) {
+		unlink(path);
+		return "write_file() failed";
+	}
+
+	ok = cassette_open(&c, path);
+	_it_should(
+		"load only the durations actually present (no OOB read)",
+		true == ok
+		&& true == c.attached
+		&& 2u == c.dur_count
+		&& 42u == c.durations[0]
+		&& 99u == c.durations[1]
+	);
+
+	unlink(path);
+	cassette_free(&c);
+	return NULL;
+}
+
 static char *test_cassette_file_round_trip(void)
 {
 	Cassette src;
@@ -254,6 +435,11 @@ static char *run_tests(void)
 	_run_test(test_cassette_playback_levels);
 	_run_test(test_cassette_ff_skips_edges);
 	_run_test(test_cassette_round_trip_playback);
+	_run_test(test_cassette_open_missing_file_attaches_empty);
+	_run_test(test_cassette_open_truncated_header_attaches_empty);
+	_run_test(test_cassette_open_bad_magic_attaches_empty);
+	_run_test(test_cassette_open_wrong_version_attaches_empty);
+	_run_test(test_cassette_open_truncated_durations_loads_partial);
 	_run_test(test_cassette_file_round_trip);
 
 	return NULL;
