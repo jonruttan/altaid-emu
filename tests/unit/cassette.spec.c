@@ -80,8 +80,7 @@ static char *test_cassette_record_stop_status(void)
 
 	_it_should(
 		"record mode sets status",
-		true == c.recording
-		&& false == c.playing
+		CASSETTE_RECORDING == c.state
 		&& 0 == strcmp(cassette_status(&c), "cassette: REC")
 	);
 
@@ -99,8 +98,7 @@ static char *test_cassette_record_stop_status(void)
 
 	_it_should(
 		"stop clears record/play flags",
-		false == c.recording
-		&& false == c.playing
+		CASSETTE_STOPPED == c.state
 		&& true == c.in_level
 		&& 0 == strcmp(cassette_status(&c), "cassette: STOP")
 	);
@@ -120,7 +118,7 @@ static char *test_cassette_playback_levels(void)
 
 	_it_should(
 		"playback starts at idle",
-		true == c.playing
+		CASSETTE_PLAYING == c.state
 		&& 210u == c.play_next_edge_tick
 		&& true == c.play_level
 		&& true == c.in_level

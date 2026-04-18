@@ -136,11 +136,11 @@ bool cassette_save(Cassette* c)
 
 void cassette_stop(Cassette* c)
 {
-	c->playing = false;
-	if (c->recording) {
-		c->recording = false;
+	enum cassette_state prev = c->state;
+
+	c->state = CASSETTE_STOPPED;
+	if (prev == CASSETTE_RECORDING)
 		(void)cassette_save(c);
-	}
 	c->in_level = c->idle_level;
 }
 
@@ -154,7 +154,7 @@ void cassette_rewind(Cassette* c)
 
 void cassette_ff(Cassette* c, uint32_t seconds, uint64_t now_tick)
 {
-	if (!c->playing || c->dur_count == 0) return;
+	if (c->state != CASSETTE_PLAYING || c->dur_count == 0) return;
 	uint64_t skip = (uint64_t)c->cpu_hz * (uint64_t)seconds;
 	uint64_t target = now_tick + skip;
 
@@ -175,8 +175,7 @@ void cassette_ff(Cassette* c, uint32_t seconds, uint64_t now_tick)
 void cassette_start_play(Cassette* c, uint64_t now_tick)
 {
 	if (!c->attached) return;
-	c->recording = false;
-	c->playing = true;
+	c->state = CASSETTE_PLAYING;
 	c->play_level = c->idle_level;
 	c->in_level = c->play_level;
 	c->play_index = 0;
@@ -187,8 +186,7 @@ void cassette_start_record(Cassette* c, uint64_t now_tick)
 {
 	if (!c->attached) return;
 	cassette_clear(c);
-	c->recording = true;
-	c->playing = false;
+	c->state = CASSETTE_RECORDING;
 	c->rec_last_edge_tick = now_tick;
 	c->rec_last_level = false;
 	c->idle_level = true;
@@ -197,7 +195,7 @@ void cassette_start_record(Cassette* c, uint64_t now_tick)
 
 void cassette_on_out_change(Cassette* c, uint64_t tick, bool new_level)
 {
-	if (!c->recording) return;
+	if (c->state != CASSETTE_RECORDING) return;
 	uint64_t dt64 = tick - c->rec_last_edge_tick;
 	uint32_t dt = (dt64 > 0xFFFFFFFFull) ? 0xFFFFFFFFu : (uint32_t)dt64;
 	vec_push(c, dt);
@@ -207,7 +205,7 @@ void cassette_on_out_change(Cassette* c, uint64_t tick, bool new_level)
 
 bool cassette_in_level_at(Cassette* c, uint64_t tick)
 {
-	if (!c->playing || c->dur_count == 0) {
+	if (c->state != CASSETTE_PLAYING || c->dur_count == 0) {
 		c->in_level = c->idle_level;
 		return c->in_level;
 	}
@@ -228,7 +226,10 @@ bool cassette_in_level_at(Cassette* c, uint64_t tick)
 const char *cassette_status(const Cassette* c)
 {
 	if (!c->attached) return "cassette: (none)";
-	if (c->recording) return "cassette: REC";
-	if (c->playing) return "cassette: PLAY";
-	return "cassette: STOP";
+	switch (c->state) {
+	case CASSETTE_RECORDING: return "cassette: REC";
+	case CASSETTE_PLAYING:   return "cassette: PLAY";
+	case CASSETTE_STOPPED:
+	default:                 return "cassette: STOP";
+	}
 }

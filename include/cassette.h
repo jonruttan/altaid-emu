@@ -21,6 +21,17 @@
 *    that produces/consumes a digital waveform on those lines should work.
 */
 
+/*
+ * Transport state. Playback and recording are mutually exclusive, so they
+ * live in a single enum rather than two bools. "attached" is a separate
+ * dimension (you can be attached but stopped).
+ */
+enum cassette_state {
+	CASSETTE_STOPPED = 0,
+	CASSETTE_PLAYING = 1,
+	CASSETTE_RECORDING = 2,
+};
+
 typedef struct {
 	bool		attached;
 	char		path[512];
@@ -31,14 +42,15 @@ typedef struct {
 	bool		idle_level;
 	bool		in_level; /* current level presented to the machine */
 
+	/* transport state */
+	enum cassette_state	state;
+
 	/* playback */
-	bool		playing;
 	bool		play_level;
 	size_t		play_index; /* next duration index */
 	uint64_t	play_next_edge_tick;
 
 	/* recording */
-	bool		recording;
 	uint64_t	rec_last_edge_tick;
 	bool		rec_last_level;
 

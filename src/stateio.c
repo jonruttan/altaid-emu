@@ -452,14 +452,18 @@ static bool write_cassette(FILE *f, const Cassette *c)
 		return false;
 	if (fwrite(c->path, 1, sizeof(c->path), f) != sizeof(c->path))
 		return false;
+	/*
+	 * On-disk layout kept identical to the pre-enum format: two bools
+	 * derived from state (playing, recording). Never both true.
+	 */
 	if (!write_u32le(f, c->cpu_hz) ||
 	    !write_bool(f, c->idle_level) ||
 	    !write_bool(f, c->in_level) ||
-	    !write_bool(f, c->playing) ||
+	    !write_bool(f, c->state == CASSETTE_PLAYING) ||
 	    !write_bool(f, c->play_level) ||
 	    !write_u64le(f, c->play_index) ||
 	    !write_u64le(f, c->play_next_edge_tick) ||
-	    !write_bool(f, c->recording) ||
+	    !write_bool(f, c->state == CASSETTE_RECORDING) ||
 	    !write_u64le(f, c->rec_last_edge_tick) ||
 	    !write_bool(f, c->rec_last_level) ||
 	    !write_u64le(f, c->dur_count))
@@ -490,18 +494,26 @@ static bool read_cassette(FILE *f, Cassette *c)
 		return false;
 	c->path[sizeof(c->path) - 1] = '\0';
 
+	bool playing;
+	bool recording;
+
 	if (!read_u32le(f, &c->cpu_hz) ||
 	    !read_bool(f, &c->idle_level) ||
 	    !read_bool(f, &c->in_level) ||
-	    !read_bool(f, &c->playing) ||
+	    !read_bool(f, &playing) ||
 	    !read_bool(f, &c->play_level) ||
 	    !read_u64le(f, &play_index) ||
 	    !read_u64le(f, &c->play_next_edge_tick) ||
-	    !read_bool(f, &c->recording) ||
+	    !read_bool(f, &recording) ||
 	    !read_u64le(f, &c->rec_last_edge_tick) ||
 	    !read_bool(f, &c->rec_last_level) ||
 	    !read_u64le(f, &dur_count))
 		return false;
+
+	/* Reconstruct state from the two legacy bools. Recording takes
+	 * precedence if both were somehow true (should not occur). */
+	c->state = recording ? CASSETTE_RECORDING :
+		   (playing ? CASSETTE_PLAYING : CASSETTE_STOPPED);
 
 	c->play_index = (size_t)play_index;
 	c->dur_count = (size_t)dur_count;
