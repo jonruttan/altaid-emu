@@ -18,6 +18,22 @@ The ALTAID05 ROM family uses interrupt-driven serial. In this emulator:
 
 If you want to run software that expects a different interrupt policy, this should be made configurable.
 
+## Front-panel key hold time
+
+The physical panel uses a momentary switch matrix that the ROM samples through
+its multiplexed row scan (`OUT 0xC0` row select + `IN 0x40` column read). The
+ROM debounces by requiring the same column state across several scan passes, so
+a "press" must remain asserted long enough to cross that debounce window.
+
+The emulator models this by holding a pressed key asserted for `--hold <ms>`
+(default **150 ms**) and then auto-releasing it on the next CPU tick past the
+deadline. The default is chosen to comfortably exceed the ROM's scan + debounce
+window; values below ~80 ms have been observed to miss presses on slower scan
+iterations.
+
+If a ROM change or clock rate change causes presses to drop again, raise
+`--hold` first before suspecting the panel model.
+
 ## Cassette
 
 Cassette is modeled as a **digital level stream**. There is no attempt to decode real audio.

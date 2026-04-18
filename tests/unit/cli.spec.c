@@ -29,7 +29,7 @@ static char *test_cfg_defaults(void)
 		2000000u == cfg.cpu_hz
 		&& 9600u == cfg.baud
 		&& 0u == cfg.panel_hz
-		&& 50u == cfg.hold_ms
+		&& 150u == cfg.hold_ms
 		&& true == cfg.realtime
 		&& true == cfg.log_flush
 		&& PANEL_TEXT_MODE_BURST == cfg.panel_text_mode

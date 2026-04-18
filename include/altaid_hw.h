@@ -147,5 +147,12 @@ uint8_t  altaid_hw_panel_stat4(const AltaidHW* hw);
 void altaid_hw_panel_press_key(AltaidHW* hw, uint8_t key_index, uint64_t now_tick, uint64_t hold_cycles);
 void altaid_hw_panel_tick(AltaidHW* hw, uint64_t now_tick);
 
+/*
+ * Enable/disable diagnostic logging of front-panel key press/release events
+ * and row-scan reads that observe a pressed key. Logs go through log_printf,
+ * so pair with --log <file> to keep the trace out of a TUI.
+ */
+void altaid_hw_set_debug(bool enable);
+
 
 #endif /* ALTAID_EMU_ALTAID_HW_H */

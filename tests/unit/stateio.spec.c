@@ -21,10 +21,17 @@
 
 #include "test-runner.h"
 
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+/* Stub log_printf: altaid_hw.c's debug path is never triggered in tests. */
+void log_printf(const char *fmt, ...)
+{
+	(void)fmt;
+}
 
 static void fill_rom(AltaidHW *hw)
 {

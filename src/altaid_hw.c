@@ -1,6 +1,32 @@
 #include "altaid_hw.h"
+#include "log.h"
 #include <stdio.h>
 #include <string.h>
+
+static bool g_debug_panel;
+
+void altaid_hw_set_debug(bool enable)
+{
+	g_debug_panel = enable;
+}
+
+static const char *panel_key_name(uint8_t key)
+{
+	switch (key) {
+	case 0: return "D0";
+	case 1: return "D1";
+	case 2: return "D2";
+	case 3: return "D3";
+	case 4: return "D4";
+	case 5: return "D5";
+	case 6: return "D6";
+	case 7: return "D7";
+	case 8: return "RUN";
+	case 9: return "MODE";
+	case 10: return "NEXT";
+	default: return "?";
+	}
+}
 
 static inline AltaidHW* HW(I8080Bus* bus) { return (AltaidHW*)bus->user; }
 
@@ -212,6 +238,16 @@ uint8_t altaid_io_in(I8080Bus* bus, uint8_t port)
 		uint8_t sw = panel_switch_nibble_for_row(hw, row);
 		v = (uint8_t)((v & 0xF0u) | (sw & 0x0Fu));
 
+		/*
+		 * Diagnostic: trace row-4/5/6 scan reads whenever any key is
+		 * currently down. Silent when the panel is idle, so the log is
+		 * bounded to the duration of actual presses.
+		 */
+		if (g_debug_panel && row >= 4u && row <= 6u && sw != 0x0Fu) {
+			log_printf("panel: SCAN row=%u nib=0x%02X\n",
+				(unsigned)row, (unsigned)sw);
+		}
+
 		/* bit5: timer */
 		if (hw->timer_level) v |= 0x20u; else v &= (uint8_t)~0x20u;
 
@@ -304,6 +340,14 @@ void altaid_hw_panel_press_key(AltaidHW* hw, uint8_t key_index, uint64_t now_tic
 
 	hw->fp_key_down[key_index] = true;
 	hw->fp_key_until[key_index] = now_tick + hold_cycles;
+
+	if (g_debug_panel) {
+		log_printf("panel: PRESS key=%u (%s) tick=%llu until=%llu hold=%llu\n",
+			(unsigned)key_index, panel_key_name(key_index),
+			(unsigned long long)now_tick,
+			(unsigned long long)hw->fp_key_until[key_index],
+			(unsigned long long)hold_cycles);
+	}
 }
 
 void altaid_hw_panel_tick(AltaidHW* hw, uint64_t now_tick)
@@ -311,6 +355,11 @@ void altaid_hw_panel_tick(AltaidHW* hw, uint64_t now_tick)
 	for (int i=0;i<11;i++) {
 		if (hw->fp_key_down[i] && now_tick >= hw->fp_key_until[i]) {
 			hw->fp_key_down[i] = false;
+			if (g_debug_panel) {
+				log_printf("panel: RELEASE key=%d (%s) tick=%llu\n",
+					i, panel_key_name((uint8_t)i),
+					(unsigned long long)now_tick);
+			}
 		}
 	}
 }

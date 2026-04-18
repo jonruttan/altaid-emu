@@ -69,6 +69,7 @@ struct Config {
 	bool		realtime;
 	bool		show_help;
 	bool		show_version;
+	bool		debug_panel;	/* trace panel key press/release/scan events */
 };
 
 void cli_usage(const char *argv0);

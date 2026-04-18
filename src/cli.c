@@ -19,7 +19,7 @@ static void cfg_defaults(struct Config *cfg)
 	cfg->cpu_hz = 2000000u;
 	cfg->baud = 9600u;
 	cfg->panel_hz = 0;
-	cfg->hold_ms = 50u;
+	cfg->hold_ms = 150u;
 	cfg->realtime = true;
 	cfg->log_flush = true;
 	cfg->panel_text_mode = PANEL_TEXT_MODE_BURST;
@@ -114,13 +114,14 @@ void cli_usage(const char *argv0)
 		"  -B, --ram-save <file>     Save RAM banks on exit.\n"
 		"\n"
 		"Other options:\n"
-		"  -H, --hold <ms>           Momentary key press duration (default 50).\n"
+		"  -H, --hold <ms>           Momentary key press duration (default 150).\n"
 		"  -r, --realtime            Throttle emulation to real-time (default on).\n"
 		"  -z, --turbo               Run as fast as possible (disables --realtime).\n"
 		"  -l, --log <file>          Write non-panel messages to a log file.\n"
 		"  -f, --log-flush <0|1>     Flush log on each write (default 1).\n"
 		"  -q, --quiet               Suppress non-essential messages (still prints PTY path).\n"
 		"  -n, --headless            Do not enter raw mode and do not enable UI keybindings.\n"
+		"  -D, --debug-panel         Log front-panel press/release/scan events (pair with --log).\n"
 		"  -h, --help                Show this help and exit.\n"
 		"  -V, --version             Print version and exit.\n",
 		argv0);
@@ -165,6 +166,7 @@ int cli_parse_args(int argc, char **argv, struct Config *cfg)
 		{"headless",      no_argument,       0, 'n'},
 		{"realtime",      no_argument,       0, 'r'},
 		{"turbo",         no_argument,       0, 'z'},
+		{"debug-panel",   no_argument,       0, 'D'},
 		{"help",          no_argument,       0, 'h'},
 		{"version",       no_argument,       0, 'V'},
 		{0, 0, 0, 0},
@@ -178,7 +180,7 @@ int cli_parse_args(int argc, char **argv, struct Config *cfg)
 
 	for (;;) {
 		opt = getopt_long(argc, argv,
-			"hVputIEm:b:C:o:S:alqnc:LRNAF:y:x:H:rzf:kv"
+			"hVputIEm:b:C:o:S:alqnc:LRNAF:y:x:H:rzf:kvD"
 			"s:J:W:M:G:B:",
 			kLongOpts, NULL);
 		if (opt == -1)
@@ -309,6 +311,9 @@ int cli_parse_args(int argc, char **argv, struct Config *cfg)
 			break;
 		case 'z':
 			cfg->realtime = false;
+			break;
+		case 'D':
+			cfg->debug_panel = true;
 			break;
 		case 'h':
 			cfg->show_help = true;

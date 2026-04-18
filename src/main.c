@@ -5,6 +5,7 @@
 #include "emu.h"
 #include "log.h"
 #include "stateio.h"
+#include "altaid_hw.h"
 
 #include <signal.h>
 #include <stdio.h>
@@ -58,6 +59,8 @@ int main(int argc, char **argv)
 	}
 
 	if (log_open(cfg.log_path, cfg.quiet, cfg.log_flush) < 0) return 1;
+
+	altaid_hw_set_debug(cfg.debug_panel);
 
 	/* Best-effort signal handling so we can unwind and restore the terminal. */
 	signal(SIGTERM, on_signal);
