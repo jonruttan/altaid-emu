@@ -22,17 +22,26 @@ If you want to run software that expects a different interrupt policy, this shou
 
 The physical panel uses a momentary switch matrix that the ROM samples through
 its multiplexed row scan (`OUT 0xC0` row select + `IN 0x40` column read). The
-ROM debounces by requiring the same column state across several scan passes, so
-a "press" must remain asserted long enough to cross that debounce window.
+ROM debounces with a per-key counter that advances **only on the iteration of
+`FP_MAT_SCAN` whose `FP_SW_PTR` currently points at that key**. Since
+`FP_SW_PTR` cycles through all 11 keys, a given key is sampled for debounce
+once every 11 `FP_MAT_SCAN` calls. The flag fires when that counter first
+reaches 8 (`CPI 08H` at `FPMS_DOWN`), meaning the key must be held continuously
+for at least `8 * 11 = 88` `FP_MAT_SCAN` iterations.
 
-The emulator models this by holding a pressed key asserted for `--hold <ms>`
-(default **150 ms**) and then auto-releasing it on the next CPU tick past the
-deadline. The default is chosen to comfortably exceed the ROM's scan + debounce
-window; values below ~80 ms have been observed to miss presses on slower scan
-iterations.
+In measured runs a `FP_MAT_SCAN` cycle takes roughly 2 ms on a 2 MHz CPU, so
+the hard threshold is **≈ 180 ms**. When the ROM is busy with serial I/O the
+scan slows further, widening the window needed for reliable debounce.
 
-If a ROM change or clock rate change causes presses to drop again, raise
-`--hold` first before suspecting the panel model.
+The emulator holds a pressed key asserted for `--hold <ms>` (default
+**300 ms**) and auto-releases on the next CPU tick past the deadline. The
+default provides headroom above the 180 ms threshold so presses register
+reliably even while the ROM is servicing RX/TX interrupts.
+
+Do **not** shorten `--hold` below ~200 ms without checking: at exactly the
+boundary (e.g. 150 ms, our previous default), presses become intermittent
+because alignment of the press against the `FP_SW_PTR` cycle determines
+whether the counter reaches 8.
 
 ## Cassette
 

@@ -19,7 +19,7 @@ static void cfg_defaults(struct Config *cfg)
 	cfg->cpu_hz = 2000000u;
 	cfg->baud = 9600u;
 	cfg->panel_hz = 0;
-	cfg->hold_ms = 150u;
+	cfg->hold_ms = 300u;
 	cfg->realtime = true;
 	cfg->log_flush = true;
 	cfg->panel_text_mode = PANEL_TEXT_MODE_BURST;
@@ -114,7 +114,7 @@ void cli_usage(const char *argv0)
 		"  -B, --ram-save <file>     Save RAM banks on exit.\n"
 		"\n"
 		"Other options:\n"
-		"  -H, --hold <ms>           Momentary key press duration (default 150).\n"
+		"  -H, --hold <ms>           Momentary key press duration (default 300).\n"
 		"  -r, --realtime            Throttle emulation to real-time (default on).\n"
 		"  -z, --turbo               Run as fast as possible (disables --realtime).\n"
 		"  -l, --log <file>          Write non-panel messages to a log file.\n"
