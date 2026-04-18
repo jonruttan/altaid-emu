@@ -14,7 +14,6 @@
 #include "emu_core.h"
 #include "cassette.h"
 #include "io.h"
-#include "io_sys.h"
 #include "log.h"
 #include "panel_ansi.h"
 #include "panel_text.h"
@@ -22,15 +21,12 @@
 #include "stateio.h"
 #include "timeutil.h"
 
-#include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/select.h>
-#include <sys/time.h>
 #include <unistd.h>
 
 typedef struct {
@@ -170,68 +166,6 @@ static void text_snapshot_emit(const struct EmuHost *host,
 	}
 	panel_render(host, core, false);
 	g_tty_at_bol = true;
-}
-
-static void pty_poll_input(int pty_fd, SerialDev *ser)
-{
-	fd_set rfds;
-	struct timeval tv;
-	uint8_t buf[256];
-	int r;
-
-	if (pty_fd < 0 || !ser) return;
-
-	FD_ZERO(&rfds);
-	FD_SET(pty_fd, &rfds);
-	tv.tv_sec = 0;
-	tv.tv_usec = 0;
-
-	r = select(pty_fd + 1, &rfds, NULL, NULL, &tv);
-	if (r <= 0) return;
-
-	for (;;) {
-		ssize_t n = ALTAID_IO_READ(pty_fd, buf, sizeof(buf));
-		if (n > 0) {
-			ssize_t i;
-			for (i = 0; i < n; i++)
-			serial_host_enqueue(ser, buf[i]);
-
-			FD_ZERO(&rfds);
-			FD_SET(pty_fd, &rfds);
-			tv.tv_sec = 0;
-			tv.tv_usec = 0;
-			r = select(pty_fd + 1, &rfds, NULL, NULL, &tv);
-			if (r <= 0) return;
-			continue;
-		}
-		if (n == 0) return;
-		if (errno == EAGAIN || errno == EWOULDBLOCK) return;
-		return;
-	}
-}
-
-static void stdin_poll_input(SerialDev *ser)
-{
-	uint8_t buf[256];
-
-	if (!ser) return;
-
-	for (;;) {
-		ssize_t n = ALTAID_IO_READ(STDIN_FILENO, buf, sizeof(buf));
-		if (n > 0) {
-			ssize_t i;
-			for (i = 0; i < n; i++) {
-				uint8_t ch = buf[i];
-				if (ch == (uint8_t)'\n')
-				ch = (uint8_t)'\r';
-				serial_host_enqueue(ser, ch);
-			}
-			continue;
-		}
-		if (n == 0) return;
-		if (errno == EAGAIN || errno == EWOULDBLOCK) return;
-		return;
-	}
 }
 
 static FILE *choose_ui_stream(const struct EmuHost *host, int term_fd_hint)
@@ -526,12 +460,12 @@ volatile sig_atomic_t *winch_flag)
 
 		/* Host inputs. */
 		if (host->cfg.use_pty)
-		pty_poll_input(host->pty_fd, &core->ser);
+		serial_routing_pty_poll(host->pty_fd, &core->ser);
 		if (!host->cfg.headless)
 		ui_poll(&host->ui, &core->ser, &core->hw, core->ser.tick,
 		key_hold_cycles);
 		else if (!host->cfg.use_pty)
-		stdin_poll_input(&core->ser);
+		serial_routing_stdin_poll(&core->ser);
 
 		if (host->ui.quit) break;
 

@@ -4,6 +4,7 @@
  * Unit tests for serial output routing rules.
  */
 
+#include "serial.c"
 #include "serial_routing.c"
 
 #include "test-runner.h"

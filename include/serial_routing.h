@@ -5,6 +5,8 @@
 
 #include <stdbool.h>
 
+#include "serial.h"
+
 /*
  * Compute the serial output fd selection.
  *
@@ -17,5 +19,17 @@
  */
 int serial_routing_fd(int ui_fd, bool tui_active, bool panel_visible,
 	int serial_spec_fd, int serial_override_fd, bool ui_stdout_same_tty);
+
+/*
+ * Drain bytes available on pty_fd (non-blocking) into the emulated serial
+ * RX queue. No-op when pty_fd < 0 or ser is NULL.
+ */
+void serial_routing_pty_poll(int pty_fd, SerialDev *ser);
+
+/*
+ * Drain bytes available on STDIN (non-blocking) into the emulated serial
+ * RX queue. '\n' is translated to '\r' to match terminal conventions.
+ */
+void serial_routing_stdin_poll(SerialDev *ser);
 
 #endif /* ALTAID_SERIAL_ROUTING_H */
