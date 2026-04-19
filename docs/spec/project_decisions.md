@@ -136,3 +136,66 @@ and maintenance.
   - Testing infrastructure improvements benefit all dependent projects.
 - References:
   - `docs/spec/design_philosophy.md` (Improve upstream test tools)
+
+### DEC-0027: Spec-based persistence flags replace six single-purpose flags
+
+- Date: 2026-04-19
+- Status: Accepted
+- Context:
+  - Previously six flags covered a small matrix of behaviors:
+    `--state-file/--state-load/--state-save` and
+    `--ram-file/--ram-load/--ram-save` (short aliases `-s/-J/-W/-M/-G/-B`).
+  - The short letters were picked arbitrarily (J for state-load, W for
+    state-save, G for ram-load, B for ram-save) and were hard to remember.
+  - The flag matrix did not compose: there was no way to load a raw blob
+    into a specific RAM bank at a specific address for test-program
+    injection.
+- Decision:
+  - Replace the six flags with three repeatable spec-driven flags:
+    `--load <spec>`, `--save <spec>`, `--default <spec>`.
+  - Spec grammar: `state:<file>`, `ram:<file>`, `ram@<addr>:<file>`,
+    `ram@<bank>.<addr>:<file>`.
+  - Drop the `ALTAIDRM` magic/header and the cross-ROM / cpu_hz / baud
+    sanity checks for RAM files: they gated legitimate cross-ROM and
+    test-fixture workflows while only catching a narrow class of user
+    error that resulted in garbage output, not data loss.  State files
+    keep `ALTAIDST` magic + u32 version for format evolution but drop
+    the same sanity checks.
+- Consequences:
+  - Fewer flags, composable, documented grammar.
+  - `--load ram@0x8100:test.bin` unlocks scripted firmware-level testing.
+  - `.ram` files produced by this version are not compatible with prior
+    versions; there is no migration tool (files were never a stable
+    contract).
+- References:
+  - `docs/persistence.md`
+  - Commit c91456d
+
+### DEC-0028: UART RX frames are gated on CPU INTE
+
+- Date: 2026-04-19
+- Status: Accepted
+- Context:
+  - Real hardware delivers serial bits at line rate regardless of CPU
+    state; bytes that arrive during DI sections (or pre-EI boot) are
+    silently lost.
+  - The v0.6 ROM spends ~600K cycles with interrupts disabled during
+    boot (PUT_CHAR bit-bang DI sections, CHKSUM_ROM, LOAD_CPM) before
+    MAIN_MENU performs EI.  Piped stdin arriving during that window
+    vanished into orphan UART frames, making scripted input unusable.
+- Decision:
+  - The UART only pops a byte from the host RX queue into a new line
+    frame when the CPU currently has interrupts enabled.  Once a frame
+    starts it plays out to completion regardless of INTE.
+  - Callers set `ser->gate_inte = cpu->inte` each step from emu_core.c.
+- Consequences:
+  - Piped input is reliable (bytes queue until the ROM can handle
+    them); matches what an operator at a terminal would naturally
+    observe.
+  - Not strictly faithful to real hardware's "bytes are lost if not
+    serviced"; this is a deliberate host-side convenience, not a
+    change to the EmuCore timing model.
+- References:
+  - `src/serial.c`, `src/emu_core.c`
+  - `README.md` (Serial options)
+  - Commit af6df67

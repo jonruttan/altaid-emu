@@ -370,6 +370,65 @@ static char *test_parse_args_rejects_bad_spec(void)
 	return NULL;
 }
 
+static char *test_parse_args_serial_in(void)
+{
+	struct Config cfg_stdin;
+	struct Config cfg_dash;
+	struct Config cfg_none;
+	struct Config cfg_bad;
+	char *argv_stdin[] = { "prog", "--serial-in", "stdin", "rom.bin", NULL };
+	char *argv_dash[]  = { "prog", "--serial-in", "-",     "rom.bin", NULL };
+	char *argv_none[]  = { "prog", "--serial-in", "none",  "rom.bin", NULL };
+	char *argv_bad[]   = { "prog", "--serial-in", "file",  "rom.bin", NULL };
+
+	reset_getopt();
+	_it_should(
+		"--serial-in stdin records the spec",
+		0 == cli_parse_args(4, argv_stdin, &cfg_stdin)
+		&& NULL != cfg_stdin.serial_in_spec
+		&& 0 == strcmp(cfg_stdin.serial_in_spec, "stdin")
+	);
+
+	reset_getopt();
+	_it_should(
+		"--serial-in - is accepted as stdin alias",
+		0 == cli_parse_args(4, argv_dash, &cfg_dash)
+		&& NULL != cfg_dash.serial_in_spec
+		&& 0 == strcmp(cfg_dash.serial_in_spec, "-")
+	);
+
+	reset_getopt();
+	_it_should(
+		"--serial-in none is accepted",
+		0 == cli_parse_args(4, argv_none, &cfg_none)
+		&& NULL != cfg_none.serial_in_spec
+		&& 0 == strcmp(cfg_none.serial_in_spec, "none")
+	);
+
+	reset_getopt();
+	_it_should(
+		"--serial-in rejects unknown values",
+		-2 == cli_parse_args(4, argv_bad, &cfg_bad)
+	);
+
+	return NULL;
+}
+
+static char *test_parse_args_defaults_serial_in_unset(void)
+{
+	struct Config cfg;
+	char *argv[] = { "prog", "rom.bin", NULL };
+
+	reset_getopt();
+	_it_should(
+		"default cfg leaves serial_in_spec NULL (mode-based behavior)",
+		0 == cli_parse_args(2, argv, &cfg)
+		&& NULL == cfg.serial_in_spec
+	);
+
+	return NULL;
+}
+
 static char *test_parse_args_help_version_without_rom(void)
 {
 	struct Config cfg;
@@ -515,6 +574,8 @@ static char *run_tests(void)
 	_run_test(test_parse_args_realtime_precedence);
 	_run_test(test_parse_args_sets_cassette_and_persistence_specs);
 	_run_test(test_parse_args_rejects_bad_spec);
+	_run_test(test_parse_args_serial_in);
+	_run_test(test_parse_args_defaults_serial_in_unset);
 	_run_test(test_parse_args_help_version_without_rom);
 	_run_test(test_parse_args_rejects_extra_arg);
 	_run_test(test_parse_args_rejects_bad_values);

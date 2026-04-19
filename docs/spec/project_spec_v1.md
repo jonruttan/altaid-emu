@@ -123,9 +123,11 @@ V1-TUI-012 (SHOULD; Status: Planned): Other optional Unicode niceties MAY be use
 
 # Serial I/O and host integration
 
-V1-SER-001 (MUST; Status: Planned): The emulator MUST support interactive serial I/O to the host terminal (non-PTY mode).
-V1-SER-002 (MUST; Status: Planned): The emulator MUST support PTY mode for integrating with terminal programs.
+V1-SER-001 (MUST; Status: Done): The emulator MUST support interactive serial I/O to the host terminal (non-PTY mode).  Default when non-headless; see `README.md`.
+V1-SER-002 (MUST; Status: Done): The emulator MUST support PTY mode for integrating with terminal programs.  Via `--pty`; see `README.md`.
 V1-SER-003 (SHOULD; Status: Planned): Documentation SHOULD include a "golden path" for connecting to the PTY and loading software over serial.
+
+V1-SER-004 (SHOULD; Status: Done): Emulated UART RX MUST support an explicit host input source for scriptable / headless use.  Delivered via `--serial-in <src>` with values `stdin`, `-`, `none`; default `stdin` when `--headless` without `--pty`, else `none`.  Queued RX bytes are only delivered to the UART while the CPU has interrupts enabled, so piped bytes are not lost during pre-EI boot DI sections.
 
 V1-SER-010 (SHOULD; Status: Planned): The repo SHOULD include a small serial sending utility in `tools/` that supports:
 - configurable per-character and per-line pacing
@@ -143,11 +145,20 @@ V1-CAS-005 (SHOULD; Status: Planned): Tools SHOULD exist to inspect or summarize
 
 # Persistence (state + RAM)
 
-V1-SAV-001 (MUST; Status: Planned): Full machine state save/load MUST exist.
-V1-SAV-002 (MUST; Status: Planned): RAM-only save/load MUST exist.
+V1-SAV-001 (MUST; Status: Done): Full machine state save/load MUST exist.
+  Delivered via `--load state:<file>` / `--save state:<file>` (see
+  `docs/persistence.md`).
+V1-SAV-002 (MUST; Status: Done): RAM-only save/load MUST exist.
+  Delivered via `--load ram:<file>` / `--save ram:<file>`.  `--load`
+  additionally accepts `ram@<addr>:<file>` and `ram@<bank>.<addr>:<file>`
+  for partial placement.
 V1-SAV-003 (MUST; Status: Planned): Full state load MUST fully reset host scheduling/timing so the restored session resumes consistently.
 V1-SAV-004 (MUST; Status: Planned): RAM-only load MUST preserve CPU/device state and host scheduling.
-V1-SAV-005 (SHOULD; Status: Planned): State/RAM file formats SHOULD be versioned, endian-stable, and include ROM identity verification.
+V1-SAV-005 (SHOULD; Status: Descoped): State file keeps a small
+  magic + u32 version for format evolution.  RAM files are raw bytes
+  (no header): earlier ROM-identity / clock / baud checks were removed
+  as they gated legitimate cross-ROM and test-fixture workflows without
+  preventing any serious user-facing failure mode.
 
 # Determinism and replay
 
