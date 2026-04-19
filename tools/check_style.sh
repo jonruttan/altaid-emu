@@ -65,9 +65,9 @@ if grep -R -n -E '\b[A-Z][A-Za-z0-9_]*\*[[:space:]]+[a-z_]' src include \
 fi
 rm -f /tmp/style_ptr_star.txt
 
-# 5) SPDX license header on every src/*.c and include/*.h file.
+# 5) SPDX license header on every C source file under src/, include/, tests/.
 : >/tmp/style_spdx_missing.txt
-for f in src/*.c include/*.h; do
+for f in src/*.c include/*.h tests/unit/*.c tests/e2e/*.c; do
 	[ -f "$f" ] || continue
 	head -1 "$f" | grep -q 'SPDX-License-Identifier:' || echo "$f" >>/tmp/style_spdx_missing.txt
 done
