@@ -658,7 +658,7 @@ static void button(char *buf, size_t cap, size_t *len, const char *label, bool p
 	else        buf_append(buf, cap, len, "[%-4s]", label);
 }
 
-static void data_buttons(char *buf, size_t cap, size_t *len, const AltaidHW* hw)
+static void data_buttons(char *buf, size_t cap, size_t *len, const AltaidHW *hw)
 {
 	for (int i=0;i<8;i++) {
 		char lb[3];

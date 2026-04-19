@@ -28,9 +28,9 @@ static const char *panel_key_name(uint8_t key)
 	}
 }
 
-static inline AltaidHW* HW(I8080Bus* bus) { return (AltaidHW*)bus->user; }
+static inline AltaidHW* HW(I8080Bus *bus) { return (AltaidHW*)bus->user; }
 
-static void recompute_ram_bank(AltaidHW* hw)
+static void recompute_ram_bank(AltaidHW *hw)
 {
 	hw->ram_bank = (uint8_t)((hw->ram_a18 ? 4 : 0) | (hw->ram_a17 ? 2 : 0) | (hw->ram_a16 ? 1 : 0));
 }
@@ -74,7 +74,7 @@ static void panel_latch_if_complete(AltaidHW *hw)
 *   row 5: bits0..3 => D4..D7
 *   row 6: bit0=RUN, bit1=MODE, bit2=NEXT, bit3=unused (1)
 */
-static uint8_t panel_switch_nibble_for_row(const AltaidHW* hw, uint8_t row)
+static uint8_t panel_switch_nibble_for_row(const AltaidHW *hw, uint8_t row)
 {
 	uint8_t nib = 0x0F;
 
@@ -95,7 +95,7 @@ static uint8_t panel_switch_nibble_for_row(const AltaidHW* hw, uint8_t row)
 	return nib;
 }
 
-void altaid_hw_init(AltaidHW* hw)
+void altaid_hw_init(AltaidHW *hw)
 {
 	memset(hw, 0, sizeof(*hw));
 
@@ -136,7 +136,7 @@ void altaid_hw_init(AltaidHW* hw)
 	}
 }
 
-void altaid_hw_reset_runtime(AltaidHW* hw)
+void altaid_hw_reset_runtime(AltaidHW *hw)
 {
 	/*
 	* Reset runtime state to power-on defaults while preserving ROM and RAM.
@@ -178,7 +178,7 @@ void altaid_hw_reset_runtime(AltaidHW* hw)
 	}
 }
 
-bool altaid_hw_load_rom64k(AltaidHW* hw, const char *path)
+bool altaid_hw_load_rom64k(AltaidHW *hw, const char *path)
 {
 	FILE *f = fopen(path, "rb");
 	if (!f) {
@@ -197,9 +197,9 @@ bool altaid_hw_load_rom64k(AltaidHW* hw, const char *path)
 	return true;
 }
 
-uint8_t altaid_mem_read(I8080Bus* bus, uint16_t addr)
+uint8_t altaid_mem_read(I8080Bus *bus, uint16_t addr)
 {
-	AltaidHW* hw = HW(bus);
+	AltaidHW *hw = HW(bus);
 
 	/* Low 32K: optionally ROM */
 	if (addr < 0x8000) {
@@ -217,17 +217,17 @@ uint8_t altaid_mem_read(I8080Bus* bus, uint16_t addr)
 	return hw->ram[hw->ram_bank][addr];
 }
 
-void altaid_mem_write(I8080Bus* bus, uint16_t addr, uint8_t v)
+void altaid_mem_write(I8080Bus *bus, uint16_t addr, uint8_t v)
 {
-	AltaidHW* hw = HW(bus);
+	AltaidHW *hw = HW(bus);
 
 	/* Shadow ROM: writes always go to RAM, even if reads are coming from ROM. */
 	hw->ram[hw->ram_bank][addr] = v;
 }
 
-uint8_t altaid_io_in(I8080Bus* bus, uint8_t port)
+uint8_t altaid_io_in(I8080Bus *bus, uint8_t port)
 {
-	AltaidHW* hw = HW(bus);
+	AltaidHW *hw = HW(bus);
 
 	/* INPUT_PORT shares address with ROM_HI latch; only reads come here. */
 	if (port == ALTAID_PORT_INPUT) {
@@ -263,9 +263,9 @@ uint8_t altaid_io_in(I8080Bus* bus, uint8_t port)
 	return 0xFF;
 }
 
-void altaid_io_out(I8080Bus* bus, uint8_t port, uint8_t v)
+void altaid_io_out(I8080Bus *bus, uint8_t port, uint8_t v)
 {
-	AltaidHW* hw = HW(bus);
+	AltaidHW *hw = HW(bus);
 
 	switch (port) {
 	case ALTAID_PORT_OUTPUT: {
@@ -333,7 +333,7 @@ void altaid_io_out(I8080Bus* bus, uint8_t port, uint8_t v)
 	}
 }
 
-void altaid_hw_panel_press_key(AltaidHW* hw, uint8_t key_index, uint64_t now_tick, uint64_t hold_cycles)
+void altaid_hw_panel_press_key(AltaidHW *hw, uint8_t key_index, uint64_t now_tick, uint64_t hold_cycles)
 {
 	if (key_index >= 11u) return;
 	if (hold_cycles == 0) hold_cycles = 1;
@@ -350,7 +350,7 @@ void altaid_hw_panel_press_key(AltaidHW* hw, uint8_t key_index, uint64_t now_tic
 	}
 }
 
-void altaid_hw_panel_tick(AltaidHW* hw, uint64_t now_tick)
+void altaid_hw_panel_tick(AltaidHW *hw, uint64_t now_tick)
 {
 	for (int i=0;i<11;i++) {
 		if (hw->fp_key_down[i] && now_tick >= hw->fp_key_until[i]) {
@@ -364,7 +364,7 @@ void altaid_hw_panel_tick(AltaidHW* hw, uint64_t now_tick)
 	}
 }
 
-uint16_t altaid_hw_panel_addr16(const AltaidHW* hw)
+uint16_t altaid_hw_panel_addr16(const AltaidHW *hw)
 {
 	uint16_t a;
 
@@ -380,7 +380,7 @@ uint16_t altaid_hw_panel_addr16(const AltaidHW* hw)
 	return a;
 }
 
-uint8_t altaid_hw_panel_data8(const AltaidHW* hw)
+uint8_t altaid_hw_panel_data8(const AltaidHW *hw)
 {
 	if (hw->panel_latched_valid)
 		return hw->panel_latched_data;
@@ -388,7 +388,7 @@ uint8_t altaid_hw_panel_data8(const AltaidHW* hw)
 			 (hw->led_row_nibble[4] & 0x0Fu));
 }
 
-uint8_t altaid_hw_panel_stat4(const AltaidHW* hw)
+uint8_t altaid_hw_panel_stat4(const AltaidHW *hw)
 {
 	if (hw->panel_latched_valid)
 		return hw->panel_latched_stat;

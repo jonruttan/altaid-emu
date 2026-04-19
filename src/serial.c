@@ -3,7 +3,7 @@
 
 static inline uint32_t q_next(uint32_t x) { return (uint32_t)((x + 1u) & SERIAL_RX_QUEUE_MASK); }
 
-void serial_init(SerialDev* s, uint32_t cpu_hz, uint32_t baud)
+void serial_init(SerialDev *s, uint32_t cpu_hz, uint32_t baud)
 {
 	memset(s, 0, sizeof(*s));
 	s->cpu_hz = cpu_hz ? cpu_hz : 2000000u;
@@ -21,7 +21,7 @@ void serial_init(SerialDev* s, uint32_t cpu_hz, uint32_t baud)
 	s->rx_irq_latched = false;
 }
 
-void serial_host_enqueue(SerialDev* s, uint8_t ch)
+void serial_host_enqueue(SerialDev *s, uint8_t ch)
 {
 	uint32_t n = q_next(s->rx_qt);
 	if (n == s->rx_qh) return; // drop
@@ -29,7 +29,7 @@ void serial_host_enqueue(SerialDev* s, uint8_t ch)
 	s->rx_qt = n;
 }
 
-static int rx_q_pop(SerialDev* s)
+static int rx_q_pop(SerialDev *s)
 {
 	if (s->rx_qh == s->rx_qt) return -1;
 	uint8_t v = s->rx_q[s->rx_qh];
@@ -37,7 +37,7 @@ static int rx_q_pop(SerialDev* s)
 	return (int)v;
 }
 
-static void rx_start_frame_if_needed(SerialDev* s)
+static void rx_start_frame_if_needed(SerialDev *s)
 {
 	if (s->rx_active) return;
 	/*
@@ -62,7 +62,7 @@ static void rx_start_frame_if_needed(SerialDev* s)
 	s->rx_irq_latched = true;
 }
 
-uint8_t serial_current_rx_level(SerialDev* s)
+uint8_t serial_current_rx_level(SerialDev *s)
 {
 	rx_start_frame_if_needed(s);
 
@@ -88,7 +88,7 @@ uint8_t serial_current_rx_level(SerialDev* s)
 	return 1; // stop
 }
 
-int serial_tick_tx(SerialDev* s, uint8_t tx_level, void (*putch)(int ch, void *u), void *u)
+int serial_tick_tx(SerialDev *s, uint8_t tx_level, void (*putch)(int ch, void *u), void *u)
 {
 	int emitted = 0;
 	// Detect start edge: idle high -> low

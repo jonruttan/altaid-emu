@@ -17,7 +17,7 @@ typedef struct {
 	uint32_t count;         /* number of durations */
 } CassFileHdr;
 
-static void vec_reserve(Cassette* c, size_t want)
+static void vec_reserve(Cassette *c, size_t want)
 {
 	if (want <= c->dur_cap) return;
 	size_t nc = c->dur_cap ? c->dur_cap : 1024;
@@ -28,7 +28,7 @@ static void vec_reserve(Cassette* c, size_t want)
 	c->dur_cap = nc;
 }
 
-static void vec_push(Cassette* c, uint32_t v)
+static void vec_push(Cassette *c, uint32_t v)
 {
 	vec_reserve(c, c->dur_count + 1);
 	if (c->dur_count < c->dur_cap) {
@@ -36,7 +36,7 @@ static void vec_push(Cassette* c, uint32_t v)
 	}
 }
 
-void cassette_init(Cassette* c, uint32_t cpu_hz)
+void cassette_init(Cassette *c, uint32_t cpu_hz)
 {
 	memset(c, 0, sizeof(*c));
 	c->cpu_hz = cpu_hz;
@@ -44,7 +44,7 @@ void cassette_init(Cassette* c, uint32_t cpu_hz)
 	c->in_level = c->idle_level;
 }
 
-void cassette_free(Cassette* c)
+void cassette_free(Cassette *c)
 {
 	cassette_stop(c);
 	if (c->durations) {
@@ -55,7 +55,7 @@ void cassette_free(Cassette* c)
 	c->dur_cap = 0;
 }
 
-static void cassette_clear(Cassette* c)
+static void cassette_clear(Cassette *c)
 {
 	c->dur_count = 0;
 	c->play_index = 0;
@@ -64,7 +64,7 @@ static void cassette_clear(Cassette* c)
 	c->in_level = c->idle_level;
 }
 
-bool cassette_open(Cassette* c, const char *path)
+bool cassette_open(Cassette *c, const char *path)
 {
 	if (!path || !path[0]) return false;
 	strncpy(c->path, path, sizeof(c->path)-1);
@@ -106,7 +106,7 @@ bool cassette_open(Cassette* c, const char *path)
 	return true;
 }
 
-bool cassette_save(Cassette* c)
+bool cassette_save(Cassette *c)
 {
 	if (!c->attached || !c->path[0]) return false;
 	FILE *f = fopen(c->path, "wb");
@@ -134,7 +134,7 @@ bool cassette_save(Cassette* c)
 	return true;
 }
 
-void cassette_stop(Cassette* c)
+void cassette_stop(Cassette *c)
 {
 	enum cassette_state prev = c->state;
 
@@ -144,7 +144,7 @@ void cassette_stop(Cassette* c)
 	c->in_level = c->idle_level;
 }
 
-void cassette_rewind(Cassette* c)
+void cassette_rewind(Cassette *c)
 {
 	c->play_index = 0;
 	c->play_level = c->idle_level;
@@ -152,7 +152,7 @@ void cassette_rewind(Cassette* c)
 	c->play_next_edge_tick = 0;
 }
 
-void cassette_ff(Cassette* c, uint32_t seconds, uint64_t now_tick)
+void cassette_ff(Cassette *c, uint32_t seconds, uint64_t now_tick)
 {
 	if (c->state != CASSETTE_PLAYING || c->dur_count == 0) return;
 	uint64_t skip = (uint64_t)c->cpu_hz * (uint64_t)seconds;
@@ -172,7 +172,7 @@ void cassette_ff(Cassette* c, uint32_t seconds, uint64_t now_tick)
 	c->in_level = c->play_level;
 }
 
-void cassette_start_play(Cassette* c, uint64_t now_tick)
+void cassette_start_play(Cassette *c, uint64_t now_tick)
 {
 	if (!c->attached) return;
 	c->state = CASSETTE_PLAYING;
@@ -182,7 +182,7 @@ void cassette_start_play(Cassette* c, uint64_t now_tick)
 	c->play_next_edge_tick = now_tick + (c->dur_count ? c->durations[0] : 0);
 }
 
-void cassette_start_record(Cassette* c, uint64_t now_tick)
+void cassette_start_record(Cassette *c, uint64_t now_tick)
 {
 	if (!c->attached) return;
 	cassette_clear(c);
@@ -193,7 +193,7 @@ void cassette_start_record(Cassette* c, uint64_t now_tick)
 	c->in_level = c->idle_level;
 }
 
-void cassette_on_out_change(Cassette* c, uint64_t tick, bool new_level)
+void cassette_on_out_change(Cassette *c, uint64_t tick, bool new_level)
 {
 	if (c->state != CASSETTE_RECORDING) return;
 	uint64_t dt64 = tick - c->rec_last_edge_tick;
@@ -203,7 +203,7 @@ void cassette_on_out_change(Cassette* c, uint64_t tick, bool new_level)
 	c->rec_last_level = new_level;
 }
 
-bool cassette_in_level_at(Cassette* c, uint64_t tick)
+bool cassette_in_level_at(Cassette *c, uint64_t tick)
 {
 	if (c->state != CASSETTE_PLAYING || c->dur_count == 0) {
 		c->in_level = c->idle_level;
@@ -223,7 +223,7 @@ bool cassette_in_level_at(Cassette* c, uint64_t tick)
 	return c->in_level;
 }
 
-const char *cassette_status(const Cassette* c)
+const char *cassette_status(const Cassette *c)
 {
 	if (!c->attached) return "cassette: (none)";
 	switch (c->state) {

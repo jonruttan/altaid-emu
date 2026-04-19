@@ -53,6 +53,18 @@ if grep -R -n "//" include >/tmp/style_cpp_comments.txt 2>/dev/null; then
 fi
 rm -f /tmp/style_cpp_comments.txt
 
+# 4) Pointer placement: style is `Type *name`, not `Type* name`.
+# Narrow to "TypeName* identifier" to avoid false positives on casts
+# (e.g. `(Type *)x`) and multiplication (e.g. `a * b`).
+if grep -R -n -E '\b[A-Z][A-Za-z0-9_]*\*[[:space:]]+[a-z_]' src include \
+	>/tmp/style_ptr_star.txt 2>/dev/null; then
+	echo "[style] pointer placement should be 'Type *name', not 'Type* name':" 1>&2
+	cat /tmp/style_ptr_star.txt 1>&2
+	rm -f /tmp/style_ptr_star.txt
+	fail "pointer placement"
+fi
+rm -f /tmp/style_ptr_star.txt
+
 # 4) Warn on >80 columns.
 # (Don't fail; large opcode tables and long format strings sometimes need this.)
 WARNED=0

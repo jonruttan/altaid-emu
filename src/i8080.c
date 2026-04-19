@@ -3,8 +3,8 @@
 
 // We keep EI-pending state in a private static (single CPU instance, minimalist).
 
-static inline uint16_t HL(const I8080* c) { return (uint16_t)((uint16_t)c->h<<8) | c->l; }
-static inline void setHL(I8080* c, uint16_t v) { c->h=(uint8_t)(v>>8); c->l=(uint8_t)v; }
+static inline uint16_t HL(const I8080 *c) { return (uint16_t)((uint16_t)c->h<<8) | c->l; }
+static inline void setHL(I8080 *c, uint16_t v) { c->h=(uint8_t)(v>>8); c->l=(uint8_t)v; }
 
 static inline bool parity(uint8_t v)
 {
@@ -14,25 +14,25 @@ static inline bool parity(uint8_t v)
 	return ((~v) & 1u) != 0;
 }
 
-static inline void set_zsp(I8080* c, uint8_t v)
+static inline void set_zsp(I8080 *c, uint8_t v)
 {
 	c->z = (v == 0);
 	c->s = (v & 0x80) != 0;
 	c->p = parity(v);
 }
 
-static inline uint8_t rd(I8080Bus* b, uint16_t a) { return b->mem_read(b, a); }
-static inline void    wr(I8080Bus* b, uint16_t a, uint8_t v) { b->mem_write(b, a, v); }
-static inline uint8_t in(I8080Bus* b, uint8_t p) { return b->io_in(b, p); }
-static inline void    out(I8080Bus* b, uint8_t p, uint8_t v) { b->io_out(b, p, v); }
+static inline uint8_t rd(I8080Bus *b, uint16_t a) { return b->mem_read(b, a); }
+static inline void    wr(I8080Bus *b, uint16_t a, uint8_t v) { b->mem_write(b, a, v); }
+static inline uint8_t in(I8080Bus *b, uint8_t p) { return b->io_in(b, p); }
+static inline void    out(I8080Bus *b, uint8_t p, uint8_t v) { b->io_out(b, p, v); }
 
-static inline void push16(I8080* c, I8080Bus* b, uint16_t v)
+static inline void push16(I8080 *c, I8080Bus *b, uint16_t v)
 {
 	wr(b, (uint16_t)(c->sp - 1), (uint8_t)(v >> 8));
 	wr(b, (uint16_t)(c->sp - 2), (uint8_t)(v));
 	c->sp = (uint16_t)(c->sp - 2);
 }
-static inline uint16_t pop16(I8080* c, I8080Bus* b)
+static inline uint16_t pop16(I8080 *c, I8080Bus *b)
 {
 	uint8_t lo = rd(b, c->sp);
 	uint8_t hi = rd(b, (uint16_t)(c->sp + 1));
@@ -40,7 +40,7 @@ static inline uint16_t pop16(I8080* c, I8080Bus* b)
 	return (uint16_t)((uint16_t)hi<<8) | lo;
 }
 
-static inline uint8_t pack_flags(const I8080* c)
+static inline uint8_t pack_flags(const I8080 *c)
 {
 	return (uint8_t)(
 	(c->s ? 0x80 : 0) |
@@ -51,7 +51,7 @@ static inline uint8_t pack_flags(const I8080* c)
 	(c->cy? 0x01 : 0)
 	);
 }
-static inline void unpack_flags(I8080* c, uint8_t f)
+static inline void unpack_flags(I8080 *c, uint8_t f)
 {
 	c->s  = (f & 0x80) != 0;
 	c->z  = (f & 0x40) != 0;
@@ -60,14 +60,14 @@ static inline void unpack_flags(I8080* c, uint8_t f)
 	c->cy = (f & 0x01) != 0;
 }
 
-static inline uint16_t rp_bc(const I8080* c) { return (uint16_t)((uint16_t)c->b<<8)|c->c; }
-static inline uint16_t rp_de(const I8080* c) { return (uint16_t)((uint16_t)c->d<<8)|c->e; }
-static inline uint16_t rp_hl(const I8080* c) { return HL(c); }
-static inline void set_rp_bc(I8080* c, uint16_t v) { c->b=(uint8_t)(v>>8); c->c=(uint8_t)v; }
-static inline void set_rp_de(I8080* c, uint16_t v) { c->d=(uint8_t)(v>>8); c->e=(uint8_t)v; }
-static inline void set_rp_hl(I8080* c, uint16_t v) { setHL(c,v); }
+static inline uint16_t rp_bc(const I8080 *c) { return (uint16_t)((uint16_t)c->b<<8)|c->c; }
+static inline uint16_t rp_de(const I8080 *c) { return (uint16_t)((uint16_t)c->d<<8)|c->e; }
+static inline uint16_t rp_hl(const I8080 *c) { return HL(c); }
+static inline void set_rp_bc(I8080 *c, uint16_t v) { c->b=(uint8_t)(v>>8); c->c=(uint8_t)v; }
+static inline void set_rp_de(I8080 *c, uint16_t v) { c->d=(uint8_t)(v>>8); c->e=(uint8_t)v; }
+static inline void set_rp_hl(I8080 *c, uint16_t v) { setHL(c,v); }
 
-static inline uint8_t *reg_ptr(I8080* c, int r)
+static inline uint8_t *reg_ptr(I8080 *c, int r)
 {
 	switch (r) {
 	case 0: return &c->b;
@@ -80,18 +80,18 @@ static inline uint8_t *reg_ptr(I8080* c, int r)
 	default: return NULL;
 	}
 }
-static inline uint8_t get_r(I8080* c, I8080Bus* b, int r)
+static inline uint8_t get_r(I8080 *c, I8080Bus *b, int r)
 {
 	if (r == 6) return rd(b, HL(c));
 	return *reg_ptr(c,r);
 }
-static inline void set_r(I8080* c, I8080Bus* b, int r, uint8_t v)
+static inline void set_r(I8080 *c, I8080Bus *b, int r, uint8_t v)
 {
 	if (r == 6) wr(b, HL(c), v);
 	else *reg_ptr(c,r) = v;
 }
 
-static inline void add8(I8080* c, uint8_t x, bool with_carry)
+static inline void add8(I8080 *c, uint8_t x, bool with_carry)
 {
 	uint16_t a = c->a;
 	uint16_t y = (uint16_t)x + ((with_carry && c->cy) ? 1u : 0u);
@@ -101,7 +101,7 @@ static inline void add8(I8080* c, uint8_t x, bool with_carry)
 	c->a  = (uint8_t)r;
 	set_zsp(c, c->a);
 }
-static inline void sub8(I8080* c, uint8_t x, bool with_borrow)
+static inline void sub8(I8080 *c, uint8_t x, bool with_borrow)
 {
 	uint16_t a = c->a;
 	uint16_t y = (uint16_t)x + ((with_borrow && c->cy) ? 1u : 0u);
@@ -111,7 +111,7 @@ static inline void sub8(I8080* c, uint8_t x, bool with_borrow)
 	c->a  = (uint8_t)r;
 	set_zsp(c, c->a);
 }
-static inline void cmp8(I8080* c, uint8_t x)
+static inline void cmp8(I8080 *c, uint8_t x)
 {
 	uint16_t a = c->a;
 	uint16_t r = a - x;
@@ -120,21 +120,21 @@ static inline void cmp8(I8080* c, uint8_t x)
 	set_zsp(c, (uint8_t)r);
 }
 
-static inline void ana8(I8080* c, uint8_t x)
+static inline void ana8(I8080 *c, uint8_t x)
 {
 	c->a &= x;
 	c->cy = false;
 	c->ac = true;
 	set_zsp(c, c->a);
 }
-static inline void xra8(I8080* c, uint8_t x)
+static inline void xra8(I8080 *c, uint8_t x)
 {
 	c->a ^= x;
 	c->cy = false;
 	c->ac = false;
 	set_zsp(c, c->a);
 }
-static inline void ora8(I8080* c, uint8_t x)
+static inline void ora8(I8080 *c, uint8_t x)
 {
 	c->a |= x;
 	c->cy = false;
@@ -142,14 +142,14 @@ static inline void ora8(I8080* c, uint8_t x)
 	set_zsp(c, c->a);
 }
 
-static inline uint8_t inr8(I8080* c, uint8_t v)
+static inline uint8_t inr8(I8080 *c, uint8_t v)
 {
 	uint8_t r = (uint8_t)(v + 1u);
 	c->ac = ((v & 0x0F) + 1u) > 0x0F;
 	set_zsp(c, r);
 	return r;
 }
-static inline uint8_t dcr8(I8080* c, uint8_t v)
+static inline uint8_t dcr8(I8080 *c, uint8_t v)
 {
 	uint8_t r = (uint8_t)(v - 1u);
 	c->ac = ((v & 0x0F) == 0x00);
@@ -157,7 +157,7 @@ static inline uint8_t dcr8(I8080* c, uint8_t v)
 	return r;
 }
 
-static inline void daa(I8080* c)
+static inline void daa(I8080 *c)
 {
 	uint8_t a = c->a;
 	uint8_t adj = 0;
@@ -173,7 +173,7 @@ static inline void daa(I8080* c)
 	set_zsp(c, c->a);
 }
 
-static inline bool cond(const I8080* c, int cc)
+static inline bool cond(const I8080 *c, int cc)
 {
 	switch (cc) {
 	case 0: return !c->z;  // NZ
@@ -188,7 +188,7 @@ static inline bool cond(const I8080* c, int cc)
 	}
 }
 
-void i8080_reset(I8080* cpu)
+void i8080_reset(I8080 *cpu)
 {
 	memset(cpu, 0, sizeof(*cpu));
 	cpu->pc = 0x0000;
@@ -198,13 +198,13 @@ void i8080_reset(I8080* cpu)
 	cpu->ei_pending = false;
 }
 
-void i8080_set_ei_pending(I8080* cpu)
+void i8080_set_ei_pending(I8080 *cpu)
 {
 	if (!cpu) return;
 	cpu->ei_pending = true;
 }
 
-void i8080_intr_service(I8080* cpu, I8080Bus* bus, uint8_t rst_vector)
+void i8080_intr_service(I8080 *cpu, I8080Bus *bus, uint8_t rst_vector)
 {
 	// 8080 interrupt acknowledge behaves like executing RST n, with 11 t-states.
 	// Emulator is responsible for accounting cycles externally.
@@ -214,7 +214,7 @@ void i8080_intr_service(I8080* cpu, I8080Bus* bus, uint8_t rst_vector)
 	cpu->pc = (uint16_t)((rst_vector & 7u) * 8u);
 }
 
-int i8080_step(I8080* c, I8080Bus* b)
+int i8080_step(I8080 *c, I8080Bus *b)
 {
 	// EI takes effect after one following instruction
 	bool apply_ei_after = c->ei_pending;
