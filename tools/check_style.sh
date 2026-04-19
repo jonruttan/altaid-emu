@@ -65,6 +65,20 @@ if grep -R -n -E '\b[A-Z][A-Za-z0-9_]*\*[[:space:]]+[a-z_]' src include \
 fi
 rm -f /tmp/style_ptr_star.txt
 
+# 5) SPDX license header on every src/*.c and include/*.h file.
+: >/tmp/style_spdx_missing.txt
+for f in src/*.c include/*.h; do
+	[ -f "$f" ] || continue
+	head -1 "$f" | grep -q 'SPDX-License-Identifier:' || echo "$f" >>/tmp/style_spdx_missing.txt
+done
+if [ -s /tmp/style_spdx_missing.txt ]; then
+	echo "[style] files missing SPDX-License-Identifier on line 1:" 1>&2
+	cat /tmp/style_spdx_missing.txt 1>&2
+	rm -f /tmp/style_spdx_missing.txt
+	fail "SPDX headers"
+fi
+rm -f /tmp/style_spdx_missing.txt
+
 # 4) Warn on >80 columns.
 # (Don't fail; large opcode tables and long format strings sometimes need this.)
 WARNED=0

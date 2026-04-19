@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 #include "i8080.h"
 #include <string.h>
 

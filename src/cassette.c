@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 #include "cassette.h"
 
 #include <stdio.h>

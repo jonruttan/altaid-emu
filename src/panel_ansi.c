@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 #include "panel_ansi.h"
 #include "altaid_hw.h"
 #include "io.h"

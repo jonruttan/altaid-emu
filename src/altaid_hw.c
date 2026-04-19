@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 #include "altaid_hw.h"
 #include "log.h"
 #include <stdio.h>

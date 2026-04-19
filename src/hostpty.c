@@ -1,3 +1,5 @@
+/* SPDX-License-Identifier: MIT */
+
 /* Ensure POSIX PTY prototypes (posix_openpt/grantpt/unlockpt/ptsname). */
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 600
