@@ -380,9 +380,17 @@ volatile sig_atomic_t *winch_flag)
 				char err[256];
 				const char *p = host->ui.ram_path[0] ?
 					host->ui.ram_path : "altaid.ram";
+				uint32_t ram_off = 0;
+
+				/* Derive bank/addr from --default ram@... if present. */
+				for (unsigned i = 0; i < host->cfg.default_count; i++) {
+					const struct IoSpec *s = &host->cfg.default_specs[i];
+					if (s->kind == IO_SPEC_RAM && s->has_addr)
+						ram_off = (uint32_t)s->bank * 0x10000u + s->addr;
+				}
 
 				host->ui.req_ram_load = false;
-				if (!stateio_load_ram(core, p, err, sizeof(err))) {
+				if (!stateio_load_ram(core, p, ram_off, err, sizeof(err))) {
 					if (tui_active) {
 						char msg[600];
 						snprintf(msg, sizeof(msg), "[RAM] load failed: %s\n", err);

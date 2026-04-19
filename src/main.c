@@ -76,18 +76,19 @@ int main(int argc, char **argv)
 
 	rc = emu_run(&emu, &g_stop, &g_winch);
 
-	/* Optional persist-on-exit. */
-	if (cfg.state_save_path) {
+	/* Apply --save specs in the order given. */
+	for (unsigned i = 0; i < cfg.save_count; i++) {
+		const struct IoSpec *s = &cfg.save_specs[i];
 		char err[256];
-		if (!stateio_save_state(&emu.core, cfg.state_save_path,
-			err, sizeof(err)))
-			log_printf("state-save failed: %s\n", err);
-	}
-	if (cfg.ram_save_path) {
-		char err[256];
-		if (!stateio_save_ram(&emu.core, cfg.ram_save_path,
-			err, sizeof(err)))
-			log_printf("ram-save failed: %s\n", err);
+		bool ok = false;
+
+		if (s->kind == IO_SPEC_STATE)
+			ok = stateio_save_state(&emu.core, s->path, err, sizeof(err));
+		else
+			ok = stateio_save_ram(&emu.core, s->path, err, sizeof(err));
+
+		if (!ok)
+			log_printf("save failed (%s): %s\n", s->path, err);
 	}
 	emu_shutdown(&emu);
 	log_close();

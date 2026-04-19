@@ -87,22 +87,29 @@ These options MUST exist and MUST remain stable unless explicitly deprecated in 
 
 ## Persistence (state + RAM)
 
-### Default filenames
+Three long-form, repeatable flags drive persistence:
 
-- `--state-file <path>` sets the default file used by Ctrl-P save/load commands.
-- `--ram-file <path>` sets the default RAM file used by Ctrl-P save/load commands.
+- `--load <spec>` applies before execution starts.
+- `--save <spec>` fires on clean exit.
+- `--default <spec>` seeds the path used by Ctrl-P save/load commands.
 
-### Startup/exit automation
+### Spec grammar
 
-- `--state-load <path>` loads machine state before starting execution.
-- `--state-save <path>` saves machine state on clean exit.
-- `--ram-load <path>` loads RAM banks before starting execution.
-- `--ram-save <path>` saves RAM banks on clean exit.
+- `state:<file>` — CPU + devices + RAM snapshot.
+- `ram:<file>` — full 512 KiB RAM (load requires the file fit; save writes
+  exactly 512 KiB).
+- `ram@<addr>:<file>` — raw blob, bank 0, starting at `<addr>`.
+- `ram@<bank>.<addr>:<file>` — raw blob, `<bank>` in 0..7, starting at `<addr>`.
+
+`<addr>` and `<bank>` accept decimal or `0x`-prefixed hex.
+
+Partial RAM form is **load-only**; `--save ram@...` is rejected at CLI parse.
 
 ### Semantics
 
 - “Machine state” MUST include CPU registers/flags, RAM banks, relevant device state (serial RX/TX state, cassette transport state if attached), and emulator tick counters required to resume deterministically.
-- “RAM only” MUST include all emulated RAM banks and MUST NOT overwrite ROM.
+- “Full RAM” MUST include all emulated RAM banks and MUST NOT overwrite ROM.
+- A partial RAM load of N bytes at `<bank>.<addr>` MUST overwrite exactly those N bytes and leave the rest of RAM untouched.
 
 ## Cassette
 
@@ -131,6 +138,11 @@ The emulator provides a “panel prefix” key chord. When the prefix is seen, t
 - `Ctrl-P s` : save full machine state to current state filename
 - `Ctrl-P l` : load full machine state from current state filename
 - `Ctrl-P f` : prompt to set state filename
+
+The state filename is seeded from `--default state:<file>`, and the RAM
+filename from the last `--default ram...` spec.  A partial RAM default
+(`--default ram@<bank>.<addr>:<file>`) makes Ctrl-P load write bytes at that
+flat offset instead of a full-RAM restore.
 
 - `Ctrl-P b` : save RAM banks to current RAM filename
 - `Ctrl-P g` : load RAM banks from current RAM filename

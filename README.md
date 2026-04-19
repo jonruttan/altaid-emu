@@ -152,13 +152,19 @@ Cassette options:
 - `-L, --cass-play`: start playing at tick 0
 - `-R, --cass-rec`: start recording at tick 0 (overwrites on exit)
 
-Persistence options:
-- `-s, --state-file <file>`: default machine state file used by Ctrl-P commands
-- `-J, --state-load <file>`: load machine state at startup
-- `-W, --state-save <file>`: save machine state on exit
-- `-M, --ram-file <file>`: default RAM file used by Ctrl-P commands
-- `-G, --ram-load <file>`: load RAM banks at startup
-- `-B, --ram-save <file>`: save RAM banks on exit
+Persistence options (repeatable):
+- `--load <spec>`: apply the spec before startup
+- `--save <spec>`: apply the spec on clean exit
+- `--default <spec>`: seed the filename used by Ctrl-P save/load
+
+Spec grammar:
+- `state:<file>` — CPU + devices + RAM snapshot
+- `ram:<file>` — full 512 KiB RAM
+- `ram@<addr>:<file>` — raw blob, bank 0, at `<addr>`
+- `ram@<bank>.<addr>:<file>` — raw blob, specific bank (0..7), at `<addr>`
+
+`<addr>` and `<bank>` accept decimal or `0x`-prefixed hex. See
+[docs/persistence.md](docs/persistence.md) for examples.
 
 Other:
 - `--hold <ms>`: momentary front-panel key press duration (default: 50)
@@ -221,9 +227,9 @@ If your goal is a clean serial capture, prefer `--serial-out <file>` (optionally
   - `n`: NEXT
   - `N`: NEXT + D7 chord ("back" in some monitors)
   - `p`: toggle panel display
-  - `s` / `l`: save/load machine state (`--state-file`)
+  - `s` / `l`: save/load machine state (path from `--default state:<file>`)
   - `f`: set state filename (interactive prompt)
-  - `b` / `g`: save/load RAM banks (`--ram-file`)
+  - `b` / `g`: save/load RAM (path from `--default ram...`)
   - `M`: set RAM filename (interactive prompt)
   - `a`: set/attach cassette filename (interactive prompt)
   - `P` / `R` / `K`: cassette Play / Record / stop

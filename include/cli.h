@@ -18,6 +18,28 @@ enum panel_text_mode {
 	PANEL_TEXT_MODE_CHANGE,
 };
 
+/*
+ * Persistence specifications.  An IoSpec is one of:
+ *   ram:<file>                 full 512 KiB RAM
+ *   ram@<addr>:<file>          raw blob, bank 0, at addr
+ *   ram@<bank>.<addr>:<file>   raw blob, specific bank, at addr
+ *   state:<file>               CPU + devices + RAM snapshot
+ */
+enum io_spec_kind {
+	IO_SPEC_RAM = 0,
+	IO_SPEC_STATE,
+};
+
+struct IoSpec {
+	enum io_spec_kind	kind;
+	unsigned		bank;		/* ram only */
+	uint16_t		addr;		/* ram only */
+	bool			has_addr;	/* false = full ram */
+	const char		*path;
+};
+
+#define CLI_IO_SPEC_MAX 16
+
 struct Config {
 	/* Required positional ROM path (64 KiB). */
 	const char	*rom_path;
@@ -53,13 +75,13 @@ struct Config {
 	bool		cassette_play;
 	bool		cassette_rec;
 
-	/* Persistence (state/RAM). */
-	const char	*state_file;      /* default path used by Ctrl-P commands */
-	const char	*ram_file;        /* default path used by Ctrl-P commands */
-	const char	*state_load_path; /* load full state at startup */
-	const char	*state_save_path; /* save full state on exit */
-	const char	*ram_load_path;   /* load RAM at startup */
-	const char	*ram_save_path;   /* save RAM on exit */
+	/* Persistence: parsed --load/--save/--default specs. */
+	struct IoSpec	load_specs[CLI_IO_SPEC_MAX];
+	unsigned	load_count;
+	struct IoSpec	save_specs[CLI_IO_SPEC_MAX];
+	unsigned	save_count;
+	struct IoSpec	default_specs[CLI_IO_SPEC_MAX];
+	unsigned	default_count;
 
 	/* Other. */
 	const char	*log_path;

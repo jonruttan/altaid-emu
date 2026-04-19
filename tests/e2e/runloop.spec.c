@@ -22,6 +22,7 @@
 #include "test-runner.h"
 #include "test-helper-system.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -118,9 +119,131 @@ static char *test_runloop_run_ms_zero_treated_as_unlimited(void)
 	return NULL;
 }
 
+static int make_temp_blob(char *out, size_t cap, const unsigned char *data,
+			  size_t len)
+{
+	int fd;
+	ssize_t written;
+
+	if (!out || cap < 32)
+		return -1;
+	snprintf(out, cap, "/tmp/altaid-e2e-blob-XXXXXX");
+	fd = mkstemp(out);
+	if (fd < 0)
+		return -1;
+	written = write(fd, data, len);
+	close(fd);
+	return (written == (ssize_t)len) ? 0 : -1;
+}
+
+static char *test_load_ram_at_offset_and_save_round_trip(void)
+{
+	unsigned char blob[32];
+	unsigned char ram[524288];
+	char rom_path[64];
+	char blob_path[64];
+	char ram_path[64];
+	char cmd[1024];
+	FILE *f;
+	int rc;
+	int i;
+	bool bytes_match;
+	bool surroundings_zero;
+
+	/* Distinct pattern so we can see it survives the round-trip. */
+	for (i = 0; i < (int)sizeof(blob); i++)
+		blob[i] = (unsigned char)(0xA0 + i);
+
+	if (make_temp_rom(rom_path, sizeof(rom_path)) != 0)
+		return "failed to create temp ROM";
+	if (make_temp_blob(blob_path, sizeof(blob_path), blob, sizeof(blob)) != 0) {
+		unlink(rom_path);
+		return "failed to create temp blob";
+	}
+	snprintf(ram_path, sizeof(ram_path), "/tmp/altaid-e2e-ram-out-%d", (int)getpid());
+
+	/* Load 32 bytes at bank 2 addr 0x1234, run briefly, save full RAM on exit. */
+	snprintf(cmd, sizeof(cmd),
+		"./altaid-emu %s --headless --turbo --run-ms 1 "
+		"--load ram@2.0x1234:%s --save ram:%s </dev/null",
+		rom_path, blob_path, ram_path);
+
+	rc = helper_system_status(cmd);
+	if (rc != 0) {
+		unlink(rom_path);
+		unlink(blob_path);
+		unlink(ram_path);
+		return "emu returned non-zero";
+	}
+
+	f = fopen(ram_path, "rb");
+	if (!f) {
+		unlink(rom_path);
+		unlink(blob_path);
+		return "saved RAM file missing";
+	}
+	if (fread(ram, 1, sizeof(ram), f) != sizeof(ram)) {
+		fclose(f);
+		unlink(rom_path);
+		unlink(blob_path);
+		unlink(ram_path);
+		return "saved RAM file wrong size";
+	}
+	fclose(f);
+
+	/* Bank 2 at 0x1234 is flat offset 2*65536 + 0x1234 = 0x21234. */
+	bytes_match = (0 == memcmp(ram + 0x21234, blob, sizeof(blob)));
+	/* Bank 2 just before and after should still be zero
+	 * (nothing else wrote there). */
+	surroundings_zero = (0 == ram[0x21234 - 1])
+			 && (0 == ram[0x21234 + sizeof(blob)]);
+
+	unlink(rom_path);
+	unlink(blob_path);
+	unlink(ram_path);
+
+	_it_should(
+		"--load ram@bank.addr:blob lands at the expected flat offset",
+		bytes_match
+	);
+	_it_should(
+		"--load does not overwrite bytes outside the blob",
+		surroundings_zero
+	);
+
+	return NULL;
+}
+
+static char *test_load_bad_spec_fails_at_startup(void)
+{
+	char rom_path[64];
+	char cmd[512];
+	int rc;
+
+	if (make_temp_rom(rom_path, sizeof(rom_path)) != 0)
+		return "failed to create temp ROM";
+
+	snprintf(cmd, sizeof(cmd),
+		"./altaid-emu %s --headless --turbo --run-ms 1 "
+		"--load garbage </dev/null 2>/dev/null",
+		rom_path);
+
+	rc = helper_system_status(cmd);
+	unlink(rom_path);
+
+	_it_should(
+		"malformed --load spec fails at CLI parse",
+		0 != rc
+	);
+
+	return NULL;
+}
+
 static char *run_tests(void)
 {
 	_run_test(test_runloop_run_ms_exits_cleanly);
 	_run_test(test_runloop_run_ms_zero_treated_as_unlimited);
+	_run_test(test_load_ram_at_offset_and_save_round_trip);
+	_run_test(test_load_bad_spec_fails_at_startup);
 	return NULL;
 }

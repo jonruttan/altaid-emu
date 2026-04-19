@@ -12,8 +12,8 @@
 /*
  * File formats:
  *
- *   STATE: magic "ALTAIDST" + u32 version + u32 rom_hash + u32 cpu_hz + u32 baud
- *   RAM:   magic "ALTAIDRM" + u32 version + u32 rom_hash + u32 cpu_hz + u32 baud
+ *   STATE: magic "ALTAIDST" + u32 version + body
+ *   RAM:   raw bytes
  *
  * All multi-byte fields are little-endian.
  */
@@ -22,8 +22,6 @@ enum { STATEIO_VER = 1 };
 
 static const unsigned char k_state_magic[8] =
 	{ 'A', 'L', 'T', 'A', 'I', 'D', 'S', 'T' };
-static const unsigned char k_ram_magic[8] =
-	{ 'A', 'L', 'T', 'A', 'I', 'D', 'R', 'M' };
 
 static void err_set(char *err, unsigned cap, const char *msg)
 {
@@ -143,51 +141,18 @@ static bool read_bool(FILE *f, bool *out)
 	return true;
 }
 
-static uint32_t fnv1a32(const void *buf, size_t len, uint32_t seed)
-{
-	const unsigned char *p = (const unsigned char *)buf;
-	uint32_t h = seed;
 
-	for (size_t i = 0; i < len; i++) {
-		h ^= (uint32_t)p[i];
-		h *= 16777619u;
-	}
-	return h;
-}
-
-uint32_t stateio_rom_hash32(const struct EmuCore *core)
-{
-	uint32_t h;
-
-	if (!core)
-		return 0;
-
-	h = 2166136261u;
-	h = fnv1a32(core->hw.rom[0], sizeof(core->hw.rom[0]), h);
-	h = fnv1a32(core->hw.rom[1], sizeof(core->hw.rom[1]), h);
-	return h;
-}
-
-static bool write_header(FILE *f, const unsigned char magic[8],
-			 uint32_t ver, uint32_t rom_hash,
-			 uint32_t cpu_hz, uint32_t baud)
+static bool write_header(FILE *f, const unsigned char magic[8], uint32_t ver)
 {
 	if (fwrite(magic, 1, 8, f) != 8)
 		return false;
 	if (!write_u32le(f, ver))
 		return false;
-	if (!write_u32le(f, rom_hash))
-		return false;
-	if (!write_u32le(f, cpu_hz))
-		return false;
-	if (!write_u32le(f, baud))
-		return false;
 	return true;
 }
 
 static bool read_header(FILE *f, const unsigned char magic[8],
-			uint32_t *out_ver, uint32_t *out_rom_hash,
-			uint32_t *out_cpu_hz, uint32_t *out_baud)
+			uint32_t *out_ver)
 {
 	unsigned char m[8];
 
@@ -196,12 +161,6 @@ static bool read_header(FILE *f, const unsigned char magic[8],
 	if (memcmp(m, magic, 8) != 0)
 		return false;
 	if (!read_u32le(f, out_ver))
-		return false;
-	if (!read_u32le(f, out_rom_hash))
-		return false;
-	if (!read_u32le(f, out_cpu_hz))
-		return false;
-	if (!read_u32le(f, out_baud))
 		return false;
 	return true;
 }
@@ -535,25 +494,15 @@ bool stateio_save_ram(const struct EmuCore *core, const char *path,
 			char *err, unsigned err_cap)
 {
 	FILE *f;
-	uint32_t rom_hash;
 
 	if (!core || !path || !*path) {
 		err_set(err, err_cap, "invalid arguments");
 		return false;
 	}
 
-	rom_hash = stateio_rom_hash32(core);
-
 	f = fopen(path, "wb");
 	if (!f) {
 		err_set_errno(err, err_cap, "open ram for write");
-		return false;
-	}
-
-	if (!write_header(f, k_ram_magic, STATEIO_VER, rom_hash,
-			  core->cfg.cpu_hz, core->cfg.baud)) {
-		err_set_errno(err, err_cap, "write ram header");
-		fclose(f);
 		return false;
 	}
 
@@ -572,19 +521,26 @@ bool stateio_save_ram(const struct EmuCore *core, const char *path,
 }
 
 bool stateio_load_ram(struct EmuCore *core, const char *path,
+			uint32_t flat_offset,
 			char *err, unsigned err_cap)
 {
 	FILE *f;
-	uint32_t ver;
-	uint32_t rom_hash;
-	uint32_t cpu_hz;
-	uint32_t baud;
-	uint32_t want_hash;
+	long file_size;
+	size_t total_ram;
+	size_t cap;
+	uint8_t *dst;
 
 	if (!core || !path || !*path) {
 		err_set(err, err_cap, "invalid arguments");
 		return false;
 	}
+
+	total_ram = sizeof(core->hw.ram);
+	if (flat_offset >= total_ram) {
+		err_set(err, err_cap, "ram offset out of range");
+		return false;
+	}
+	cap = total_ram - flat_offset;
 
 	f = fopen(path, "rb");
 	if (!f) {
@@ -592,30 +548,21 @@ bool stateio_load_ram(struct EmuCore *core, const char *path,
 		return false;
 	}
 
-	if (!read_header(f, k_ram_magic, &ver, &rom_hash, &cpu_hz, &baud)) {
-		err_set(err, err_cap, "bad ram file (magic/header)");
+	if (fseek(f, 0, SEEK_END) != 0 ||
+	    (file_size = ftell(f)) < 0 ||
+	    fseek(f, 0, SEEK_SET) != 0) {
+		err_set_errno(err, err_cap, "stat ram");
 		fclose(f);
 		return false;
 	}
-	if (ver != STATEIO_VER) {
-		err_set(err, err_cap, "unsupported ram file version");
-		fclose(f);
-		return false;
-	}
-
-	want_hash = stateio_rom_hash32(core);
-	if (rom_hash != want_hash) {
-		err_set(err, err_cap, "ram file ROM hash mismatch");
-		fclose(f);
-		return false;
-	}
-	if (cpu_hz != core->cfg.cpu_hz || baud != core->cfg.baud) {
-		err_set(err, err_cap, "ram file CPU/baud mismatch");
+	if ((size_t)file_size > cap) {
+		err_set(err, err_cap, "ram file too large for destination");
 		fclose(f);
 		return false;
 	}
 
-	if (!read_exact(f, core->hw.ram, sizeof(core->hw.ram))) {
+	dst = (uint8_t *)core->hw.ram + flat_offset;
+	if (file_size > 0 && !read_exact(f, dst, (size_t)file_size)) {
 		err_set_errno(err, err_cap, "read ram");
 		fclose(f);
 		return false;
@@ -629,14 +576,11 @@ bool stateio_save_state(const struct EmuCore *core, const char *path,
 			char *err, unsigned err_cap)
 {
 	FILE *f;
-	uint32_t rom_hash;
 
 	if (!core || !path || !*path) {
 		err_set(err, err_cap, "invalid arguments");
 		return false;
 	}
-
-	rom_hash = stateio_rom_hash32(core);
 
 	f = fopen(path, "wb");
 	if (!f) {
@@ -644,8 +588,7 @@ bool stateio_save_state(const struct EmuCore *core, const char *path,
 		return false;
 	}
 
-	if (!write_header(f, k_state_magic, STATEIO_VER, rom_hash,
-			  core->cfg.cpu_hz, core->cfg.baud)) {
+	if (!write_header(f, k_state_magic, STATEIO_VER)) {
 		err_set_errno(err, err_cap, "write state header");
 		fclose(f);
 		return false;
@@ -688,10 +631,6 @@ bool stateio_load_state(struct EmuCore *core, const char *path,
 {
 	FILE *f;
 	uint32_t ver;
-	uint32_t rom_hash;
-	uint32_t cpu_hz;
-	uint32_t baud;
-	uint32_t want_hash;
 	uint32_t tx_r;
 	uint32_t tx_w;
 	bool cas_attached;
@@ -707,25 +646,13 @@ bool stateio_load_state(struct EmuCore *core, const char *path,
 		return false;
 	}
 
-	if (!read_header(f, k_state_magic, &ver, &rom_hash, &cpu_hz, &baud)) {
+	if (!read_header(f, k_state_magic, &ver)) {
 		err_set(err, err_cap, "bad state file (magic/header)");
 		fclose(f);
 		return false;
 	}
 	if (ver != STATEIO_VER) {
 		err_set(err, err_cap, "unsupported state file version");
-		fclose(f);
-		return false;
-	}
-
-	want_hash = stateio_rom_hash32(core);
-	if (rom_hash != want_hash) {
-		err_set(err, err_cap, "state file ROM hash mismatch");
-		fclose(f);
-		return false;
-	}
-	if (cpu_hz != core->cfg.cpu_hz || baud != core->cfg.baud) {
-		err_set(err, err_cap, "state file CPU/baud mismatch");
 		fclose(f);
 		return false;
 	}

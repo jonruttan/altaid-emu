@@ -34,8 +34,9 @@ static char *test_cfg_defaults(void)
 		&& true == cfg.log_flush
 		&& PANEL_TEXT_MODE_BURST == cfg.panel_text_mode
 		&& true == cfg.panel_compact
-		&& 0 == strcmp(cfg.state_file, "altaid.state")
-		&& 0 == strcmp(cfg.ram_file, "altaid.ram")
+		&& 0u == cfg.load_count
+		&& 0u == cfg.save_count
+		&& 0u == cfg.default_count
 		&& 0u == cfg.max_run_ms
 	);
 
@@ -272,37 +273,98 @@ static char *test_parse_args_realtime_precedence(void)
 	return NULL;
 }
 
-static char *test_parse_args_sets_cassette_and_persistence_paths(void)
+static char *test_parse_args_sets_cassette_and_persistence_specs(void)
 {
 	struct Config cfg;
 	char *argv[] = {
 		"prog",
 		"--cass", "tape.altap",
 		"--cass-play",
-		"--state-file", "altaid.state2",
-		"--state-load", "load.state",
-		"--state-save", "save.state",
-		"--ram-file", "altaid.ram2",
-		"--ram-load", "load.ram",
-		"--ram-save", "save.ram",
+		"--load", "state:load.state",
+		"--save", "state:save.state",
+		"--default", "state:altaid.state",
+		"--load", "ram@0x0100:test.bin",
+		"--load", "ram@2.0x2000:lib.bin",
+		"--save", "ram:snapshot.ram",
+		"--default", "ram@1.0x0000:altaid.ram",
 		"rom.bin",
 		NULL
 	};
-	int argc = 17;
+	int argc = 19;
 
 	reset_getopt();
 	_it_should(
-		"parse args sets cassette and persistence paths",
+		"parse args records cassette and load/save/default specs",
 		0 == cli_parse_args(argc, argv, &cfg)
 		&& 0 == strcmp(cfg.cassette_path, "tape.altap")
 		&& true == cfg.cassette_play
 		&& false == cfg.cassette_rec
-		&& 0 == strcmp(cfg.state_file, "altaid.state2")
-		&& 0 == strcmp(cfg.state_load_path, "load.state")
-		&& 0 == strcmp(cfg.state_save_path, "save.state")
-		&& 0 == strcmp(cfg.ram_file, "altaid.ram2")
-		&& 0 == strcmp(cfg.ram_load_path, "load.ram")
-		&& 0 == strcmp(cfg.ram_save_path, "save.ram")
+		&& 3u == cfg.load_count
+		&& IO_SPEC_STATE == cfg.load_specs[0].kind
+		&& 0 == strcmp(cfg.load_specs[0].path, "load.state")
+		&& IO_SPEC_RAM == cfg.load_specs[1].kind
+		&& true == cfg.load_specs[1].has_addr
+		&& 0u == cfg.load_specs[1].bank
+		&& 0x0100u == cfg.load_specs[1].addr
+		&& 0 == strcmp(cfg.load_specs[1].path, "test.bin")
+		&& IO_SPEC_RAM == cfg.load_specs[2].kind
+		&& 2u == cfg.load_specs[2].bank
+		&& 0x2000u == cfg.load_specs[2].addr
+		&& 2u == cfg.save_count
+		&& IO_SPEC_STATE == cfg.save_specs[0].kind
+		&& 0 == strcmp(cfg.save_specs[0].path, "save.state")
+		&& IO_SPEC_RAM == cfg.save_specs[1].kind
+		&& false == cfg.save_specs[1].has_addr
+		&& 0 == strcmp(cfg.save_specs[1].path, "snapshot.ram")
+		&& 2u == cfg.default_count
+		&& IO_SPEC_STATE == cfg.default_specs[0].kind
+		&& 0 == strcmp(cfg.default_specs[0].path, "altaid.state")
+		&& IO_SPEC_RAM == cfg.default_specs[1].kind
+		&& 1u == cfg.default_specs[1].bank
+		&& 0 == strcmp(cfg.default_specs[1].path, "altaid.ram")
+	);
+
+	return NULL;
+}
+
+static char *test_parse_args_rejects_bad_spec(void)
+{
+	struct Config cfg;
+	char *argv_missing_colon[] = {
+		"prog", "--load", "ram", "rom.bin", NULL
+	};
+	char *argv_bad_kind[] = {
+		"prog", "--load", "zz:foo", "rom.bin", NULL
+	};
+	char *argv_bad_addr[] = {
+		"prog", "--load", "ram@nope:foo", "rom.bin", NULL
+	};
+	char *argv_save_addr[] = {
+		"prog", "--save", "ram@0x100:foo", "rom.bin", NULL
+	};
+
+	reset_getopt();
+	_it_should(
+		"reject spec with no colon",
+		-2 == cli_parse_args(4, argv_missing_colon, &cfg)
+	);
+
+	reset_getopt();
+	_it_should(
+		"reject spec with unknown kind",
+		-2 == cli_parse_args(4, argv_bad_kind, &cfg)
+	);
+
+	reset_getopt();
+	_it_should(
+		"reject spec with bad address",
+		-2 == cli_parse_args(4, argv_bad_addr, &cfg)
+	);
+
+	reset_getopt();
+	_it_should(
+		"reject --save ram@... (save is full-ram only)",
+		-2 == cli_parse_args(4, argv_save_addr, &cfg)
 	);
 
 	return NULL;
@@ -451,7 +513,8 @@ static char *run_tests(void)
 	_run_test(test_parse_args_more_flags);
 	_run_test(test_parse_args_panel_compact_precedence);
 	_run_test(test_parse_args_realtime_precedence);
-	_run_test(test_parse_args_sets_cassette_and_persistence_paths);
+	_run_test(test_parse_args_sets_cassette_and_persistence_specs);
+	_run_test(test_parse_args_rejects_bad_spec);
 	_run_test(test_parse_args_help_version_without_rom);
 	_run_test(test_parse_args_rejects_extra_arg);
 	_run_test(test_parse_args_rejects_bad_values);

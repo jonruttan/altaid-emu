@@ -24,8 +24,103 @@ static void cfg_defaults(struct Config *cfg)
 	cfg->log_flush = true;
 	cfg->panel_text_mode = PANEL_TEXT_MODE_BURST;
 	cfg->panel_compact = true;
-	cfg->state_file = "altaid.state";
-	cfg->ram_file = "altaid.ram";
+}
+
+/*
+ * Parse a persistence spec.  Returns 0 on success, -1 on error.
+ *
+ *   "state:<path>"
+ *   "ram:<path>"
+ *   "ram@<addr>:<path>"
+ *   "ram@<bank>.<addr>:<path>"
+ *
+ * <addr> and <bank> accept hex (0x…) or decimal.
+ */
+static int parse_io_spec(const char *arg, struct IoSpec *out)
+{
+	if (!arg || !out)
+		return -1;
+
+	memset(out, 0, sizeof(*out));
+
+	if (!strncmp(arg, "state:", 6)) {
+		if (!arg[6])
+			return -1;
+		out->kind = IO_SPEC_STATE;
+		out->path = arg + 6;
+		return 0;
+	}
+
+	if (!strncmp(arg, "ram:", 4)) {
+		if (!arg[4])
+			return -1;
+		out->kind = IO_SPEC_RAM;
+		out->path = arg + 4;
+		return 0;
+	}
+
+	if (!strncmp(arg, "ram@", 4)) {
+		const char *p = arg + 4;
+		const char *colon;
+		char buf[64];
+		char *dot;
+		char *endp;
+		unsigned long bank = 0;
+		unsigned long addr;
+		size_t len;
+
+		colon = strchr(p, ':');
+		if (!colon || colon == p || !colon[1])
+			return -1;
+
+		len = (size_t)(colon - p);
+		if (len >= sizeof(buf))
+			return -1;
+		memcpy(buf, p, len);
+		buf[len] = '\0';
+
+		dot = strchr(buf, '.');
+		if (dot) {
+			*dot = '\0';
+			errno = 0;
+			bank = strtoul(buf, &endp, 0);
+			if (errno || endp == buf || *endp || bank > 7)
+				return -1;
+			errno = 0;
+			addr = strtoul(dot + 1, &endp, 0);
+			if (errno || endp == dot + 1 || *endp || addr > 0xFFFF)
+				return -1;
+		} else {
+			errno = 0;
+			addr = strtoul(buf, &endp, 0);
+			if (errno || endp == buf || *endp || addr > 0xFFFF)
+				return -1;
+		}
+
+		out->kind = IO_SPEC_RAM;
+		out->bank = (unsigned)bank;
+		out->addr = (uint16_t)addr;
+		out->has_addr = true;
+		out->path = colon + 1;
+		return 0;
+	}
+
+	return -1;
+}
+
+static int push_spec(struct IoSpec *list, unsigned *count, unsigned max,
+		     const char *arg)
+{
+	if (*count >= max) {
+		fprintf(stderr, "too many load/save/default specs (max %u)\n", max);
+		return -1;
+	}
+	if (parse_io_spec(arg, &list[*count]) < 0) {
+		fprintf(stderr, "bad spec: %s\n", arg);
+		return -1;
+	}
+	(*count)++;
+	return 0;
 }
 
 static int parse_u32(const char *s, uint32_t *out)
@@ -105,13 +200,16 @@ void cli_usage(const char *argv0)
 		"  -L, --cass-play           Start playing at tick 0.\n"
 		"  -R, --cass-rec            Start recording at tick 0 (overwrites on exit).\n"
 		"\n"
-		"State / RAM options:\n"
-		"  -s, --state-file <file>   Default state file for Ctrl-P save/load.\n"
-		"  -J, --state-load <file>   Load full machine state at startup.\n"
-		"  -W, --state-save <file>   Save full machine state on exit.\n"
-		"  -M, --ram-file <file>     Default RAM file for Ctrl-P save/load.\n"
-		"  -G, --ram-load <file>     Load RAM banks at startup.\n"
-		"  -B, --ram-save <file>     Save RAM banks on exit.\n"
+		"Persistence options (repeatable):\n"
+		"  --load <spec>             Load bytes at startup (see SPECS below).\n"
+		"  --save <spec>             Save bytes on exit.\n"
+		"  --default <spec>          Default spec for Ctrl-P save/load.\n"
+		"\n"
+		"  SPECS:\n"
+		"    state:<file>                CPU + devices + RAM snapshot.\n"
+		"    ram:<file>                  Full 512 KiB RAM.\n"
+		"    ram@<addr>:<file>           Raw blob, bank 0, at address.\n"
+		"    ram@<bank>.<addr>:<file>    Raw blob, specific bank, at address.\n"
 		"\n"
 		"Other options:\n"
 		"  -H, --hold <ms>           Momentary key press duration (default 300).\n"
@@ -155,12 +253,9 @@ int cli_parse_args(int argc, char **argv, struct Config *cfg)
 		{"cass",          required_argument, 0, 'c'},
 		{"cass-play",     no_argument,       0, 'L'},
 		{"cass-rec",      no_argument,       0, 'R'},
-		{"state-file",    required_argument, 0, 's'},
-		{"state-load",    required_argument, 0, 'J'},
-		{"state-save",    required_argument, 0, 'W'},
-		{"ram-file",      required_argument, 0, 'M'},
-		{"ram-load",      required_argument, 0, 'G'},
-		{"ram-save",      required_argument, 0, 'B'},
+		{"load",          required_argument, 0,  1 },
+		{"save",          required_argument, 0,  2 },
+		{"default",       required_argument, 0,  3 },
 		{"log",           required_argument, 0, 'l'},
 		{"log-flush",     required_argument, 0, 'f'},
 		{"quiet",         no_argument,       0, 'q'},
@@ -182,8 +277,7 @@ int cli_parse_args(int argc, char **argv, struct Config *cfg)
 
 	for (;;) {
 		opt = getopt_long(argc, argv,
-			"hVputIEm:b:C:o:S:alqnc:LRNAF:y:x:H:rzf:kvDT:"
-			"s:J:W:M:G:B:",
+			"hVputIEm:b:C:o:S:alqnc:LRNAF:y:x:H:rzf:kvDT:",
 			kLongOpts, NULL);
 		if (opt == -1)
 			break;
@@ -272,23 +366,26 @@ int cli_parse_args(int argc, char **argv, struct Config *cfg)
 		case 'R':
 			cfg->cassette_rec = true;
 			break;
-		case 's':
-			cfg->state_file = optarg;
+		case 1: /* --load */
+			if (push_spec(cfg->load_specs, &cfg->load_count,
+				      CLI_IO_SPEC_MAX, optarg) < 0)
+				return -2;
 			break;
-		case 'J':
-			cfg->state_load_path = optarg;
+		case 2: /* --save */
+			if (push_spec(cfg->save_specs, &cfg->save_count,
+				      CLI_IO_SPEC_MAX, optarg) < 0)
+				return -2;
+			if (cfg->save_specs[cfg->save_count - 1].kind == IO_SPEC_RAM
+			    && cfg->save_specs[cfg->save_count - 1].has_addr) {
+				fprintf(stderr,
+					"--save ram@addr not supported (save is full-ram only)\n");
+				return -2;
+			}
 			break;
-		case 'W':
-			cfg->state_save_path = optarg;
-			break;
-		case 'M':
-			cfg->ram_file = optarg;
-			break;
-		case 'G':
-			cfg->ram_load_path = optarg;
-			break;
-		case 'B':
-			cfg->ram_save_path = optarg;
+		case 3: /* --default */
+			if (push_spec(cfg->default_specs, &cfg->default_count,
+				      CLI_IO_SPEC_MAX, optarg) < 0)
+				return -2;
 			break;
 		case 'l':
 			cfg->log_path = optarg;

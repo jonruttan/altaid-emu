@@ -119,17 +119,20 @@ const struct Config *cfg)
 	host->ui.serial_ro = host->cfg.use_pty ? !host->cfg.pty_input : false;
 	host->ui.pty_mode = host->cfg.use_pty;
 	host->ui.pty_input = host->cfg.pty_input;
-	if (host->cfg.state_file)
-		strncpy(host->ui.state_path, host->cfg.state_file,
-			sizeof(host->ui.state_path));
-	else
-		host->ui.state_path[0] = '\0';
+	/* Seed UI prompt defaults from --default specs (last of each kind wins). */
+	host->ui.state_path[0] = '\0';
+	host->ui.ram_path[0] = '\0';
+	for (unsigned i = 0; i < host->cfg.default_count; i++) {
+		const struct IoSpec *s = &host->cfg.default_specs[i];
+		if (s->kind == IO_SPEC_STATE && s->path) {
+			strncpy(host->ui.state_path, s->path,
+				sizeof(host->ui.state_path) - 1);
+		} else if (s->kind == IO_SPEC_RAM && s->path) {
+			strncpy(host->ui.ram_path, s->path,
+				sizeof(host->ui.ram_path) - 1);
+		}
+	}
 	host->ui.state_path[sizeof(host->ui.state_path) - 1] = '\0';
-	if (host->cfg.ram_file)
-		strncpy(host->ui.ram_path, host->cfg.ram_file,
-			sizeof(host->ui.ram_path));
-	else
-		host->ui.ram_path[0] = '\0';
 	host->ui.ram_path[sizeof(host->ui.ram_path) - 1] = '\0';
 	if (host->cfg.cassette_path)
 		strncpy(host->ui.cass_path, host->cfg.cassette_path,

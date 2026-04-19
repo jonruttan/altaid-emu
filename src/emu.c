@@ -20,18 +20,22 @@ int emu_init(struct Emu *emu, const struct Config *cfg)
 	emu_core_init(&emu->core, cfg->cpu_hz, cfg->baud);
 	if (!emu_core_load_rom64k(&emu->core, cfg->rom_path)) return -1;
 
-	/* Optional startup restore. */
-	if (cfg->state_load_path) {
-		if (!stateio_load_state(&emu->core, cfg->state_load_path,
-			err, sizeof(err))) {
-			log_printf("state-load failed: %s\n", err);
-			return -1;
+	/* Apply --load specs in the order given; later loads overwrite overlapping
+	 * regions. */
+	for (unsigned i = 0; i < cfg->load_count; i++) {
+		const struct IoSpec *s = &cfg->load_specs[i];
+		bool ok = false;
+
+		if (s->kind == IO_SPEC_STATE) {
+			ok = stateio_load_state(&emu->core, s->path,
+						err, sizeof(err));
+		} else {
+			uint32_t off = (uint32_t)s->bank * 0x10000u + s->addr;
+			ok = stateio_load_ram(&emu->core, s->path, off,
+					      err, sizeof(err));
 		}
-	}
-	if (cfg->ram_load_path) {
-		if (!stateio_load_ram(&emu->core, cfg->ram_load_path,
-			err, sizeof(err))) {
-			log_printf("ram-load failed: %s\n", err);
+		if (!ok) {
+			log_printf("load failed (%s): %s\n", s->path, err);
 			return -1;
 		}
 	}

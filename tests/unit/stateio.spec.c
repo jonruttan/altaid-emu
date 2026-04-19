@@ -69,11 +69,8 @@ static FILE *mem_open(unsigned char *buf, size_t len)
 
 static char *test_state_header_bad_magic(void)
 {
-	unsigned char buf[8 + 16];
+	unsigned char buf[8 + 4];
 	uint32_t ver = 0;
-	uint32_t rom = 0;
-	uint32_t cpu = 0;
-	uint32_t baud = 0;
 	FILE *f;
 	bool ok;
 
@@ -84,7 +81,7 @@ static char *test_state_header_bad_magic(void)
 	if (!f)
 		return "fmemopen() failed";
 
-	ok = read_header(f, k_state_magic, &ver, &rom, &cpu, &baud);
+	ok = read_header(f, k_state_magic, &ver);
 	fclose(f);
 
 	_it_should(
@@ -97,11 +94,8 @@ static char *test_state_header_bad_magic(void)
 
 static char *test_state_header_bad_version(void)
 {
-	unsigned char buf[8 + 16];
+	unsigned char buf[8 + 4];
 	uint32_t ver = 0;
-	uint32_t rom = 0;
-	uint32_t cpu = 0;
-	uint32_t baud = 0;
 	FILE *f;
 	bool ok;
 	bool version_ok;
@@ -109,15 +103,12 @@ static char *test_state_header_bad_version(void)
 	memset(buf, 0, sizeof(buf));
 	memcpy(buf, k_state_magic, 8);
 	write_u32le_buf(buf + 8, STATEIO_VER + 1u);
-	write_u32le_buf(buf + 12, 0x11111111u);
-	write_u32le_buf(buf + 16, 2000000u);
-	write_u32le_buf(buf + 20, 9600u);
 
 	f = mem_open(buf, sizeof(buf));
 	if (!f)
 		return "fmemopen() failed";
 
-	ok = read_header(f, k_state_magic, &ver, &rom, &cpu, &baud);
+	ok = read_header(f, k_state_magic, &ver);
 	fclose(f);
 
 	version_ok = ok && (ver == STATEIO_VER);
@@ -125,34 +116,6 @@ static char *test_state_header_bad_version(void)
 	_it_should(
 		"detect unsupported state version",
 		false == version_ok
-	);
-
-	return NULL;
-}
-
-static char *test_ram_header_bad_magic(void)
-{
-	unsigned char buf[8 + 16];
-	uint32_t ver = 0;
-	uint32_t rom = 0;
-	uint32_t cpu = 0;
-	uint32_t baud = 0;
-	FILE *f;
-	bool ok;
-
-	memset(buf, 0, sizeof(buf));
-	memcpy(buf, "BADDRAM!", 8);
-
-	f = mem_open(buf, sizeof(buf));
-	if (!f)
-		return "fmemopen() failed";
-
-	ok = read_header(f, k_ram_magic, &ver, &rom, &cpu, &baud);
-	fclose(f);
-
-	_it_should(
-		"reject bad ram magic",
-		false == ok
 	);
 
 	return NULL;
@@ -233,7 +196,7 @@ static char *test_load_state_bad_magic_fails(void)
 	struct EmuCore core;
 	char path[64];
 	char err[256];
-	unsigned char buf[8 + 16];
+	unsigned char buf[8 + 4];
 	bool ok;
 
 	emu_core_init(&core, 2000000u, 9600u);
@@ -262,79 +225,6 @@ static char *test_load_state_bad_magic_fails(void)
 	return NULL;
 }
 
-static char *test_load_state_rom_hash_mismatch_fails(void)
-{
-	struct EmuCore core_save;
-	struct EmuCore core_load;
-	char path[64];
-	char err[256];
-	bool ok;
-
-	emu_core_init(&core_save, 2000000u, 9600u);
-	fill_rom(&core_save.hw);
-
-	if (make_temp_path(path, sizeof(path)) != 0)
-		return "mkstemp() failed";
-
-	if (!stateio_save_state(&core_save, path, err, sizeof(err))) {
-		unlink(path);
-		return "save failed";
-	}
-
-	/* Load into a core whose ROM hashes differently. */
-	emu_core_init(&core_load, 2000000u, 9600u);
-	memset(core_load.hw.rom[0], 0xAA, sizeof(core_load.hw.rom[0]));
-	memset(core_load.hw.rom[1], 0xBB, sizeof(core_load.hw.rom[1]));
-
-	err[0] = '\0';
-	ok = stateio_load_state(&core_load, path, err, sizeof(err));
-
-	_it_should(
-		"reject state file with mismatched ROM hash",
-		false == ok
-		&& NULL != strstr(err, "ROM hash")
-	);
-
-	unlink(path);
-	return NULL;
-}
-
-static char *test_load_state_cpu_hz_mismatch_fails(void)
-{
-	struct EmuCore core_save;
-	struct EmuCore core_load;
-	char path[64];
-	char err[256];
-	bool ok;
-
-	emu_core_init(&core_save, 2000000u, 9600u);
-	fill_rom(&core_save.hw);
-
-	if (make_temp_path(path, sizeof(path)) != 0)
-		return "mkstemp() failed";
-
-	if (!stateio_save_state(&core_save, path, err, sizeof(err))) {
-		unlink(path);
-		return "save failed";
-	}
-
-	/* Load into a core with a different CPU clock. */
-	emu_core_init(&core_load, 4000000u, 9600u);
-	fill_rom(&core_load.hw);
-
-	err[0] = '\0';
-	ok = stateio_load_state(&core_load, path, err, sizeof(err));
-
-	_it_should(
-		"reject state file with mismatched CPU/baud",
-		false == ok
-		&& NULL != strstr(err, "CPU/baud")
-	);
-
-	unlink(path);
-	return NULL;
-}
-
 static char *test_load_ram_missing_file_fails(void)
 {
 	struct EmuCore core;
@@ -350,7 +240,7 @@ static char *test_load_ram_missing_file_fails(void)
 	unlink(path);
 
 	err[0] = '\0';
-	ok = stateio_load_ram(&core, path, err, sizeof(err));
+	ok = stateio_load_ram(&core, path, 0, err, sizeof(err));
 
 	_it_should(
 		"fail with an error message on missing ram file",
@@ -361,55 +251,36 @@ static char *test_load_ram_missing_file_fails(void)
 	return NULL;
 }
 
-static char *test_load_ram_truncated_after_header_fails(void)
+static char *test_load_ram_too_large_fails(void)
 {
-	struct EmuCore core_save;
-	struct EmuCore core_load;
+	struct EmuCore core;
 	char path[64];
 	char err[256];
-	FILE *f;
-	unsigned char hdr[8 + 16];
-	size_t header_bytes;
+	unsigned char blob[16];
 	bool ok;
 
-	emu_core_init(&core_save, 2000000u, 9600u);
-	fill_rom(&core_save.hw);
+	emu_core_init(&core, 2000000u, 9600u);
+	fill_rom(&core.hw);
+
+	memset(blob, 0xAA, sizeof(blob));
 
 	if (make_temp_path(path, sizeof(path)) != 0)
 		return "mkstemp() failed";
-
-	if (!stateio_save_ram(&core_save, path, err, sizeof(err))) {
+	if (write_file(path, blob, sizeof(blob)) != 0) {
 		unlink(path);
-		return "save failed";
+		return "write_file() failed";
 	}
-
-	/* Truncate the saved file to header-only. */
-	f = fopen(path, "rb");
-	if (!f) {
-		unlink(path);
-		return "reopen failed";
-	}
-	header_bytes = fread(hdr, 1, sizeof(hdr), f);
-	fclose(f);
-	if (header_bytes != sizeof(hdr)) {
-		unlink(path);
-		return "short read on saved header";
-	}
-	if (write_file(path, hdr, sizeof(hdr)) != 0) {
-		unlink(path);
-		return "rewrite failed";
-	}
-
-	emu_core_init(&core_load, 2000000u, 9600u);
-	fill_rom(&core_load.hw);
 
 	err[0] = '\0';
-	ok = stateio_load_ram(&core_load, path, err, sizeof(err));
+	/* 16-byte blob at offset total_ram - 8 overflows by 8 bytes. */
+	ok = stateio_load_ram(&core, path,
+			      (uint32_t)(sizeof(core.hw.ram) - 8),
+			      err, sizeof(err));
 
 	_it_should(
-		"fail cleanly when ram body is truncated",
+		"fail when load overflows destination",
 		false == ok
-		&& '\0' != err[0]
+		&& NULL != strstr(err, "too large")
 	);
 
 	unlink(path);
@@ -492,7 +363,7 @@ static char *test_stateio_state_roundtrip(void)
 	return NULL;
 }
 
-static char *test_stateio_ram_roundtrip(void)
+static char *test_stateio_ram_full_roundtrip(void)
 {
 	struct EmuCore core1;
 	struct EmuCore core2;
@@ -517,15 +388,60 @@ static char *test_stateio_ram_roundtrip(void)
 	core2.cpu.a = 0x99;
 
 	_it_should(
-		"load ram from temp file",
-		true == stateio_load_ram(&core2, path, err, sizeof(err))
+		"load full ram from offset 0",
+		true == stateio_load_ram(&core2, path, 0, err, sizeof(err))
 	);
 
 	_it_should(
-		"ram round-trip preserves cpu state",
+		"ram round-trip preserves data and does not touch cpu",
 		0xaa == core2.hw.ram[1][0x2000]
 		&& 0x77 == core2.hw.ram[7][0xff00]
 		&& 0x99 == core2.cpu.a
+	);
+
+	unlink(path);
+	return NULL;
+}
+
+static char *test_stateio_ram_partial_load_at_offset(void)
+{
+	struct EmuCore core;
+	char path[64];
+	char err[256];
+	unsigned char blob[4] = { 0xDE, 0xAD, 0xBE, 0xEF };
+	uint32_t off;
+
+	emu_core_init(&core, 2000000u, 9600u);
+	fill_rom(&core.hw);
+
+	if (make_temp_path(path, sizeof(path)) != 0)
+		return "mkstemp() failed";
+	if (write_file(path, blob, sizeof(blob)) != 0) {
+		unlink(path);
+		return "write_file() failed";
+	}
+
+	/* Bank 2 at 0x0100 (flat offset = 2*0x10000 + 0x100). */
+	off = 2u * 0x10000u + 0x100u;
+
+	_it_should(
+		"load 4-byte blob into bank 2 at 0x0100",
+		true == stateio_load_ram(&core, path, off, err, sizeof(err))
+	);
+
+	_it_should(
+		"bytes land at the intended location",
+		0xDE == core.hw.ram[2][0x0100]
+		&& 0xAD == core.hw.ram[2][0x0101]
+		&& 0xBE == core.hw.ram[2][0x0102]
+		&& 0xEF == core.hw.ram[2][0x0103]
+	);
+
+	_it_should(
+		"other banks are untouched",
+		0x00 == core.hw.ram[0][0x0100]
+		&& 0x00 == core.hw.ram[1][0x0100]
+		&& 0x00 == core.hw.ram[3][0x0100]
 	);
 
 	unlink(path);
@@ -536,16 +452,14 @@ static char *run_tests(void)
 {
 	_run_test(test_state_header_bad_magic);
 	_run_test(test_state_header_bad_version);
-	_run_test(test_ram_header_bad_magic);
 	_run_test(test_load_state_missing_file_fails);
 	_run_test(test_load_state_truncated_header_fails);
 	_run_test(test_load_state_bad_magic_fails);
-	_run_test(test_load_state_rom_hash_mismatch_fails);
-	_run_test(test_load_state_cpu_hz_mismatch_fails);
 	_run_test(test_load_ram_missing_file_fails);
-	_run_test(test_load_ram_truncated_after_header_fails);
+	_run_test(test_load_ram_too_large_fails);
 	_run_test(test_stateio_state_roundtrip);
-	_run_test(test_stateio_ram_roundtrip);
+	_run_test(test_stateio_ram_full_roundtrip);
+	_run_test(test_stateio_ram_partial_load_at_offset);
 
 	return NULL;
 }
