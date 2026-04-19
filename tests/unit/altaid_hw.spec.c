@@ -255,6 +255,75 @@ static char *test_altaid_hw_altaid_hw_panel_tick(void)
 	return NULL;
 }
 
+static char *test_altaid_hw_panel_set_switch(void)
+{
+	AltaidHW hw;
+
+	altaid_hw_init(&hw);
+
+	_it_should(
+		"switches start cleared",
+		false == hw.fp_switch_state[0]
+		&& false == hw.fp_switch_state[3]
+		&& false == hw.fp_switch_state[7]
+	);
+
+	altaid_hw_panel_set_switch(&hw, 3, true);
+	_it_should(
+		"set latches only the targeted switch",
+		false == hw.fp_switch_state[0]
+		&& true == hw.fp_switch_state[3]
+		&& false == hw.fp_switch_state[4]
+	);
+
+	/*
+	 * Row 4 covers D0..D3; D3 being on must show as bit3 cleared in the
+	 * active-low nibble returned to the CPU.
+	 */
+	_it_should(
+		"latched switch D3 appears low in row 4 nibble",
+		0x07u == panel_switch_nibble_for_row(&hw, 4)
+	);
+
+	/*
+	 * Tick must not clear a latched switch.
+	 */
+	altaid_hw_panel_tick(&hw, 9999999ull);
+	_it_should(
+		"panel_tick leaves latched switches alone",
+		true == hw.fp_switch_state[3]
+	);
+
+	/*
+	 * A momentary press on top of a latched switch -- switch stays set
+	 * after the press auto-releases.
+	 */
+	altaid_hw_panel_press_key(&hw, 3, 1000ull, 100ull);
+	altaid_hw_panel_tick(&hw, 2000ull);
+	_it_should(
+		"momentary press on latched switch leaves latch intact",
+		false == hw.fp_key_down[3]
+		&& true == hw.fp_switch_state[3]
+	);
+
+	altaid_hw_panel_set_switch(&hw, 3, false);
+	_it_should(
+		"clearing latch restores row 4 to all-high",
+		false == hw.fp_switch_state[3]
+		&& 0x0Fu == panel_switch_nibble_for_row(&hw, 4)
+	);
+
+	/* Out-of-range indices (only D0..D7 exist) are ignored. */
+	altaid_hw_panel_set_switch(&hw, 8, true);
+	altaid_hw_panel_set_switch(&hw, 255, true);
+	_it_should(
+		"ignore out-of-range switch index",
+		false == hw.fp_switch_state[0]
+	);
+
+	return NULL;
+}
+
 static char *test_altaid_hw_altaid_hw_panel_addr16(void)
 {
 	return NULL;
@@ -284,6 +353,7 @@ static char *run_tests(void)
 	_run_test(test_altaid_hw_altaid_io_out);
 	_run_test(test_altaid_hw_altaid_hw_panel_press_key);
 	_run_test(test_altaid_hw_altaid_hw_panel_tick);
+	_run_test(test_altaid_hw_panel_set_switch);
 	_run_test(test_altaid_hw_altaid_hw_panel_addr16);
 	_run_test(test_altaid_hw_altaid_hw_panel_data8);
 	_run_test(test_altaid_hw_altaid_hw_panel_stat4);

@@ -69,7 +69,16 @@ static void panel_latch_if_complete(AltaidHW *hw)
 }
 
 /*
-* Switch matrix is active-low with pull-ups. The ROM treats keys as momentary.
+* Switch matrix is active-low with pull-ups.  The ROM polls this matrix
+* row-by-row, so each read needs the current logical state of every key
+* in the row.
+*
+* D0..D7 (rows 4 and 5) combine two sources:
+*   - fp_key_down[]: momentary pulses from the TUI and --press flag
+*   - fp_switch_state[]: sticky toggle set by --switch
+* Either source pulling low means "switch is on" for the CPU.
+*
+* RUN / MODE / NEXT (row 6) are momentary only.
 *
 * Mapping derived from altaid05.asm debounce logic:
 *   row 4: bits0..3 => D0..D3
@@ -82,11 +91,13 @@ static uint8_t panel_switch_nibble_for_row(const AltaidHW *hw, uint8_t row)
 
 	if (row == 4) {
 		for (int i=0;i<4;i++) {
-			if (hw->fp_key_down[i]) nib = (uint8_t)(nib & (uint8_t)~(1u<<i));
+			if (hw->fp_key_down[i] || hw->fp_switch_state[i])
+				nib = (uint8_t)(nib & (uint8_t)~(1u<<i));
 		}
 	} else if (row == 5) {
 		for (int i=0;i<4;i++) {
-			if (hw->fp_key_down[4+i]) nib = (uint8_t)(nib & (uint8_t)~(1u<<i));
+			if (hw->fp_key_down[4+i] || hw->fp_switch_state[4+i])
+				nib = (uint8_t)(nib & (uint8_t)~(1u<<i));
 		}
 	} else if (row == 6) {
 		if (hw->fp_key_down[8])  nib = (uint8_t)(nib & (uint8_t)~1u);
@@ -363,6 +374,21 @@ void altaid_hw_panel_tick(AltaidHW *hw, uint64_t now_tick)
 					(unsigned long long)now_tick);
 			}
 		}
+	}
+	/*
+	 * fp_switch_state is intentionally left alone: physical toggle
+	 * switches do not spring back.
+	 */
+}
+
+void altaid_hw_panel_set_switch(AltaidHW *hw, uint8_t d_index, bool on)
+{
+	if (d_index >= 8u) return;
+	hw->fp_switch_state[d_index] = on;
+	if (g_debug_panel) {
+		log_printf("panel: %s switch D%u\n",
+			on ? "SET  " : "CLEAR",
+			(unsigned)d_index);
 	}
 }
 

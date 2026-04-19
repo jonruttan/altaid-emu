@@ -16,9 +16,14 @@
  *   RAM:   raw bytes
  *
  * All multi-byte fields are little-endian.
+ *
+ * Version history:
+ *   1 -- initial.
+ *   2 -- added fp_switch_state[8] (latched data-switch state) at the
+ *        end of the HW block, after fp_key_until[11].
  */
 
-enum { STATEIO_VER = 1 };
+enum { STATEIO_VER = 2 };
 
 static const unsigned char k_state_magic[8] =
 	{ 'A', 'L', 'T', 'A', 'I', 'D', 'S', 'T' };
@@ -348,6 +353,12 @@ static bool write_hw(FILE *f, const AltaidHW *hw)
 			return false;
 	}
 
+	/* Latched data-switch state (STATEIO_VER >= 2). */
+	for (size_t i = 0; i < 8; i++) {
+		if (!write_bool(f, hw->fp_switch_state[i]))
+			return false;
+	}
+
 	return true;
 }
 
@@ -396,6 +407,12 @@ static bool read_hw(FILE *f, AltaidHW *hw)
 		if (!read_bool(f, &hw->fp_key_down[i]))
 			return false;
 		if (!read_u64le(f, &hw->fp_key_until[i]))
+			return false;
+	}
+
+	/* Latched data-switch state (STATEIO_VER >= 2). */
+	for (size_t i = 0; i < 8; i++) {
+		if (!read_bool(f, &hw->fp_switch_state[i]))
 			return false;
 	}
 

@@ -319,6 +319,10 @@ static char *test_stateio_state_roundtrip(void)
 	core1.hw.ram[3][0x1234] = 0x5au;
 	core1.hw.ram_bank = 3u;
 
+	core1.hw.fp_switch_state[0] = true;
+	core1.hw.fp_switch_state[3] = true;
+	core1.hw.fp_switch_state[7] = true;
+
 	core1.cas_attached = true;
 	core1.cas.attached = true;
 
@@ -357,6 +361,10 @@ static char *test_stateio_state_roundtrip(void)
 		&& 1u == core2.ser.rx_qt
 		&& 0x5au == core2.hw.ram[3][0x1234]
 		&& 3u == core2.hw.ram_bank
+		&& true == core2.hw.fp_switch_state[0]
+		&& false == core2.hw.fp_switch_state[1]
+		&& true == core2.hw.fp_switch_state[3]
+		&& true == core2.hw.fp_switch_state[7]
 		&& true == core2.cas_attached
 		&& true == core2.cas.attached
 	);
