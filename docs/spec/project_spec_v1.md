@@ -129,6 +129,12 @@ V1-SER-003 (SHOULD; Status: Planned): Documentation SHOULD include a "golden pat
 
 V1-SER-004 (SHOULD; Status: Done): Emulated UART RX MUST support an explicit host input source for scriptable / headless use.  Delivered via `--serial-in <src>` with values `stdin`, `-`, `none`; default `stdin` when `--headless` without `--pty`, else `none`.  Queued RX bytes are only delivered to the UART while the CPU has interrupts enabled, so piped bytes are not lost during pre-EI boot DI sections.
 
+# Front panel
+
+V1-PANEL-001 (SHOULD; Status: Done): D-switches (D0..D7) MUST be modeled as latched physical toggles in addition to the TUI's momentary-press layer, so ROM paths that sample switch state (boot baud-select, alternate ISR variants) are reachable under `--headless`.
+V1-PANEL-002 (SHOULD; Status: Done): Scripted panel input MUST be available via repeatable CLI flags: `--press <key>[@<ms>[:<hold_ms>]]` for momentary presses of any key, `--switch <Dn>=<0|1>[@<ms>]` for latched data-switch state.
+V1-PANEL-003 (SHOULD; Status: Planned): A corresponding read-side introspection (e.g. state-file inspection tool or `--dump-panel`) SHOULD exist so tests can verify panel state after a run without parsing the binary save format by hand.
+
 V1-SER-010 (SHOULD; Status: Planned): The repo SHOULD include a small serial sending utility in `tools/` that supports:
 - configurable per-character and per-line pacing
 - CR/LF translation modes

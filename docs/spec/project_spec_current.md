@@ -86,6 +86,27 @@ These options MUST exist and MUST remain stable unless explicitly deprecated in 
     (INTE=true).  Bytes arriving during DI sections or pre-EI boot stay
     queued until the ROM is ready, instead of being lost mid-boot.
 
+## Scripted front-panel input
+
+Two repeatable flags drive the front panel from the command line so
+`--headless` runs can exercise ROM paths that react to panel state
+(GET_KEY, boot baud-select, alternate ISR variants, FORMAT-confirm):
+
+- `--press <key>[@<ms>[:<hold_ms>]]` — momentary press of any of the
+  11 panel keys (`D0`..`D7`, `RUN`, `MODE`, `NEXT`) at emulated time
+  `<ms>` (default `0`), auto-released after `<hold_ms>` (defaults to
+  `--hold`, i.e. 300 ms).  Equivalent to the TUI's Ctrl-P keystroke
+  pulse.
+- `--switch <Dn>=<0|1>[@<ms>]` — set a latched data-switch state at
+  time `<ms>` (default `0`).  Data switches are physical toggles on
+  real hardware; they stay where set and are only cleared by another
+  `--switch Dn=0` or emulator exit.
+
+Names are case-insensitive.  `--switch` is valid only for `D0`..`D7`
+(RUN/MODE/NEXT are momentary-only).  Event deadlines use the same
+emulated-CPU-time base as `--run-ms`.  Each event fires at most once
+per `emu_run` invocation; reset (Ctrl-P R) does not replay them.
+
 ## Terminal sizing
 
 - TUI mode MUST size itself from the best available terminal size probe.

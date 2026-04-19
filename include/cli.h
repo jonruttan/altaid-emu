@@ -40,6 +40,35 @@ struct IoSpec {
 
 #define CLI_IO_SPEC_MAX 16
 
+/*
+ * Scripted front-panel input events.  One of:
+ *   PANEL_EVENT_PRESS   momentary press of any key (D0..D7, RUN, MODE, NEXT)
+ *   PANEL_EVENT_SWITCH  latched set/clear of a data switch (D0..D7 only)
+ *
+ * key_index:
+ *   0..7  -> D0..D7
+ *   8     -> RUN
+ *   9     -> MODE
+ *   10    -> NEXT
+ *
+ * Switch events use key_index 0..7 only; `value` holds on/off.
+ * Press events use `hold_ms` for auto-release.
+ */
+enum panel_event_kind {
+	PANEL_EVENT_PRESS = 0,
+	PANEL_EVENT_SWITCH,
+};
+
+struct PanelEvent {
+	enum panel_event_kind	kind;
+	uint8_t		key_index;
+	bool		value;		/* switch only */
+	uint32_t	at_ms;		/* emulated-time deadline */
+	uint32_t	hold_ms;	/* press only */
+};
+
+#define CLI_PANEL_EVENT_MAX 32
+
 struct Config {
 	/* Required positional ROM path (64 KiB). */
 	const char	*rom_path;
@@ -83,6 +112,10 @@ struct Config {
 	unsigned	save_count;
 	struct IoSpec	default_specs[CLI_IO_SPEC_MAX];
 	unsigned	default_count;
+
+	/* Scripted front-panel input: --press / --switch. */
+	struct PanelEvent	panel_events[CLI_PANEL_EVENT_MAX];
+	unsigned		panel_event_count;
 
 	/* Other. */
 	const char	*log_path;

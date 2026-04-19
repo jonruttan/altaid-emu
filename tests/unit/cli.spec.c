@@ -431,6 +431,88 @@ static char *test_parse_args_defaults_serial_in_unset(void)
 	return NULL;
 }
 
+static char *test_parse_args_press_and_switch(void)
+{
+	struct Config cfg;
+	char *argv[] = {
+		"prog",
+		"--press", "RUN",
+		"--press", "D3@500",
+		"--press", "mode@1000:50",
+		"--switch", "D0=1",
+		"--switch", "D7=0@2000",
+		"rom.bin",
+		NULL
+	};
+	int argc = 12;
+
+	reset_getopt();
+	_it_should(
+		"parse args records press and switch events",
+		0 == cli_parse_args(argc, argv, &cfg)
+		&& 5u == cfg.panel_event_count
+		/* --press RUN (key=8, at=0, hold=0 -> default) */
+		&& PANEL_EVENT_PRESS == cfg.panel_events[0].kind
+		&& 8u == cfg.panel_events[0].key_index
+		&& 0u == cfg.panel_events[0].at_ms
+		&& 0u == cfg.panel_events[0].hold_ms
+		/* --press D3@500 */
+		&& PANEL_EVENT_PRESS == cfg.panel_events[1].kind
+		&& 3u == cfg.panel_events[1].key_index
+		&& 500u == cfg.panel_events[1].at_ms
+		&& 0u == cfg.panel_events[1].hold_ms
+		/* --press mode@1000:50  (case-insensitive key name) */
+		&& PANEL_EVENT_PRESS == cfg.panel_events[2].kind
+		&& 9u == cfg.panel_events[2].key_index
+		&& 1000u == cfg.panel_events[2].at_ms
+		&& 50u == cfg.panel_events[2].hold_ms
+		/* --switch D0=1 */
+		&& PANEL_EVENT_SWITCH == cfg.panel_events[3].kind
+		&& 0u == cfg.panel_events[3].key_index
+		&& true == cfg.panel_events[3].value
+		&& 0u == cfg.panel_events[3].at_ms
+		/* --switch D7=0@2000 */
+		&& PANEL_EVENT_SWITCH == cfg.panel_events[4].kind
+		&& 7u == cfg.panel_events[4].key_index
+		&& false == cfg.panel_events[4].value
+		&& 2000u == cfg.panel_events[4].at_ms
+	);
+
+	return NULL;
+}
+
+static char *test_parse_args_rejects_bad_panel_spec(void)
+{
+	struct Config cfg;
+	char *argv_unknown_key[]  = { "prog", "--press", "FOO", "rom.bin", NULL };
+	char *argv_bad_ms[]       = { "prog", "--press", "D0@xx", "rom.bin", NULL };
+	char *argv_sw_no_eq[]     = { "prog", "--switch", "D0", "rom.bin", NULL };
+	char *argv_sw_bad_val[]   = { "prog", "--switch", "D0=2", "rom.bin", NULL };
+	char *argv_sw_non_data[]  = { "prog", "--switch", "RUN=1", "rom.bin", NULL };
+
+	reset_getopt();
+	_it_should("reject --press with unknown key name",
+		-2 == cli_parse_args(4, argv_unknown_key, &cfg));
+
+	reset_getopt();
+	_it_should("reject --press with non-numeric ms",
+		-2 == cli_parse_args(4, argv_bad_ms, &cfg));
+
+	reset_getopt();
+	_it_should("reject --switch without '='",
+		-2 == cli_parse_args(4, argv_sw_no_eq, &cfg));
+
+	reset_getopt();
+	_it_should("reject --switch with value outside {0,1}",
+		-2 == cli_parse_args(4, argv_sw_bad_val, &cfg));
+
+	reset_getopt();
+	_it_should("reject --switch on non-data key (RUN/MODE/NEXT don't latch)",
+		-2 == cli_parse_args(4, argv_sw_non_data, &cfg));
+
+	return NULL;
+}
+
 static char *test_parse_args_help_version_without_rom(void)
 {
 	struct Config cfg;
@@ -578,6 +660,8 @@ static char *run_tests(void)
 	_run_test(test_parse_args_rejects_bad_spec);
 	_run_test(test_parse_args_serial_in);
 	_run_test(test_parse_args_defaults_serial_in_unset);
+	_run_test(test_parse_args_press_and_switch);
+	_run_test(test_parse_args_rejects_bad_panel_spec);
 	_run_test(test_parse_args_help_version_without_rom);
 	_run_test(test_parse_args_rejects_extra_arg);
 	_run_test(test_parse_args_rejects_bad_values);

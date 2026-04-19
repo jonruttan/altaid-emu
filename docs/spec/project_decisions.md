@@ -199,3 +199,45 @@ and maintenance.
   - `src/serial.c`, `src/emu_core.c`
   - `README.md` (Serial options)
   - Commit af6df67
+
+### DEC-0029: D-switches are latched; RUN/MODE/NEXT stay momentary
+
+- Date: 2026-04-19
+- Status: Accepted
+- Context:
+  - The emulator previously modeled all 11 front-panel keys (D0..D7,
+    RUN, MODE, NEXT) as momentary: `fp_key_down[i]` is true only
+    while `now_tick < fp_key_until[i]`.
+  - That's correct for RUN/MODE/NEXT (spring-loaded buttons) but
+    wrong for D0..D7 (physical toggle switches).  Boot baud-select
+    and the alternate ISR variants read the switch port on every
+    scan during boot and need a value that persists across the
+    whole read loop.
+  - The TUI works around it by re-pulsing on each keystroke, which
+    is fine for interactive use but cannot represent "D3 is ON
+    while boot polls INPUT_PORT" in `--headless` runs.
+- Decision:
+  - Add `fp_switch_state[8]` alongside the existing
+    `fp_key_down[11]`.  The scan-row reader ORs the two, so either
+    source pulling low registers as "switch on" to the CPU.
+  - New API `altaid_hw_panel_set_switch(hw, d_index, on)` drives
+    the latched layer.  `altaid_hw_panel_tick` does NOT clear it;
+    `altaid_hw_reset_runtime` also leaves it alone (a reset
+    wouldn't un-flip a physical switch either).
+  - Two new CLI flags: `--press <key>[@<ms>[:<hold_ms>]]` for
+    momentary presses of any key, `--switch <Dn>=<0|1>[@<ms>]` for
+    latched data-switch state.  Events are scheduled by emulated
+    CPU time, dispatched from the runloop once per emu_run.
+  - TUI behavior is unchanged.  Ctrl-P `3` still pulses D3; it does
+    not toggle the latch.
+- Consequences:
+  - GET_KEY, boot baud-select, FORMAT-confirm, and alternate ISR
+    variants become reachable under `--headless`.
+  - Bump STATEIO_VER from 1 to 2 to cover the new field; prior
+    `.state` files are rejected with the existing "unsupported
+    state file version" error.
+- References:
+  - `src/altaid_hw.c`, `include/altaid_hw.h`
+  - `src/cli.c`, `src/runloop.c`, `include/cli.h`
+  - `docs/spec/project_spec_current.md` (Scripted front-panel input)
+  - `docs/spec/project_spec_v1.md` (V1-PANEL-001/002)

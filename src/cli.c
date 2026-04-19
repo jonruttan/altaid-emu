@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>	/* strcasecmp */
 
 static void cfg_defaults(struct Config *cfg)
 {
@@ -123,6 +124,151 @@ static int push_spec(struct IoSpec *list, unsigned *count, unsigned max,
 	return 0;
 }
 
+/*
+ * Case-insensitive match of a panel key name to its key_index.
+ * Accepts D0..D7, RUN, MODE, NEXT.  Returns -1 on unknown.
+ */
+static int panel_key_name_to_index(const char *name)
+{
+	if (!name)
+		return -1;
+
+	if ((name[0] == 'D' || name[0] == 'd')
+	    && name[1] >= '0' && name[1] <= '7'
+	    && name[2] == '\0') {
+		return name[1] - '0';
+	}
+	if (!strcasecmp(name, "RUN"))
+		return 8;
+	if (!strcasecmp(name, "MODE"))
+		return 9;
+	if (!strcasecmp(name, "NEXT"))
+		return 10;
+	return -1;
+}
+
+/*
+ * Parse "<key>[@<ms>[:<hold_ms>]]".
+ * Defaults: ms=0, hold_ms=0 (caller substitutes the CLI default).
+ */
+static int parse_press_spec(const char *arg, struct PanelEvent *out)
+{
+	char buf[64];
+	char *at;
+	char *colon;
+	char *endp;
+	unsigned long v;
+	int key;
+
+	if (!arg || !out)
+		return -1;
+	if (strlen(arg) >= sizeof(buf))
+		return -1;
+
+	memset(out, 0, sizeof(*out));
+	out->kind = PANEL_EVENT_PRESS;
+
+	strcpy(buf, arg);
+	at = strchr(buf, '@');
+	if (at)
+		*at = '\0';
+
+	key = panel_key_name_to_index(buf);
+	if (key < 0)
+		return -1;
+	out->key_index = (uint8_t)key;
+
+	if (at) {
+		colon = strchr(at + 1, ':');
+		if (colon)
+			*colon = '\0';
+		if (!at[1])
+			return -1;
+		errno = 0;
+		v = strtoul(at + 1, &endp, 0);
+		if (errno || endp == at + 1 || *endp || v > UINT32_MAX)
+			return -1;
+		out->at_ms = (uint32_t)v;
+		if (colon) {
+			if (!colon[1])
+				return -1;
+			errno = 0;
+			v = strtoul(colon + 1, &endp, 0);
+			if (errno || endp == colon + 1 || *endp || v > UINT32_MAX)
+				return -1;
+			out->hold_ms = (uint32_t)v;
+		}
+	}
+
+	return 0;
+}
+
+/*
+ * Parse "<Dn>=<0|1>[@<ms>]".
+ */
+static int parse_switch_spec(const char *arg, struct PanelEvent *out)
+{
+	char buf[64];
+	char *eq;
+	char *at;
+	char *endp;
+	unsigned long v;
+	int key;
+
+	if (!arg || !out)
+		return -1;
+	if (strlen(arg) >= sizeof(buf))
+		return -1;
+
+	memset(out, 0, sizeof(*out));
+	out->kind = PANEL_EVENT_SWITCH;
+
+	strcpy(buf, arg);
+	eq = strchr(buf, '=');
+	if (!eq)
+		return -1;
+	*eq = '\0';
+
+	key = panel_key_name_to_index(buf);
+	if (key < 0 || key > 7)	/* D0..D7 only */
+		return -1;
+	out->key_index = (uint8_t)key;
+
+	at = strchr(eq + 1, '@');
+	if (at)
+		*at = '\0';
+
+	if (!strcmp(eq + 1, "1"))
+		out->value = true;
+	else if (!strcmp(eq + 1, "0"))
+		out->value = false;
+	else
+		return -1;
+
+	if (at) {
+		if (!at[1])
+			return -1;
+		errno = 0;
+		v = strtoul(at + 1, &endp, 0);
+		if (errno || endp == at + 1 || *endp || v > UINT32_MAX)
+			return -1;
+		out->at_ms = (uint32_t)v;
+	}
+
+	return 0;
+}
+
+static int push_panel_event(struct Config *cfg, const struct PanelEvent *ev)
+{
+	if (cfg->panel_event_count >= CLI_PANEL_EVENT_MAX) {
+		fprintf(stderr, "too many --press/--switch events (max %u)\n",
+			CLI_PANEL_EVENT_MAX);
+		return -1;
+	}
+	cfg->panel_events[cfg->panel_event_count++] = *ev;
+	return 0;
+}
+
 static int parse_u32(const char *s, uint32_t *out)
 {
 	char *end = NULL;
@@ -213,6 +359,15 @@ void cli_usage(const char *argv0)
 		"    ram@<addr>:<file>           Raw blob, bank 0, at address.\n"
 		"    ram@<bank>.<addr>:<file>    Raw blob, specific bank, at address.\n"
 		"\n"
+		"Front-panel input (repeatable):\n"
+		"  --press <key>[@<ms>[:<hold_ms>]]\n"
+		"                            Momentary press at emulated time <ms>.\n"
+		"                            <key>: D0..D7, RUN, MODE, NEXT.\n"
+		"                            Default <ms>=0; <hold_ms> defaults to --hold.\n"
+		"  --switch <Dn>=<0|1>[@<ms>]\n"
+		"                            Set latched data switch D0..D7 at time <ms>.\n"
+		"                            Default <ms>=0.  Switches stay where set.\n"
+		"\n"
 		"Other options:\n"
 		"  -H, --hold <ms>           Momentary key press duration (default 300).\n"
 		"  -r, --realtime            Throttle emulation to real-time (default on).\n"
@@ -259,6 +414,8 @@ int cli_parse_args(int argc, char **argv, struct Config *cfg)
 		{"load",          required_argument, 0,  1 },
 		{"save",          required_argument, 0,  2 },
 		{"default",       required_argument, 0,  3 },
+		{"press",         required_argument, 0,  4 },
+		{"switch",        required_argument, 0,  5 },
 		{"log",           required_argument, 0, 'l'},
 		{"log-flush",     required_argument, 0, 'f'},
 		{"quiet",         no_argument,       0, 'q'},
@@ -400,6 +557,26 @@ int cli_parse_args(int argc, char **argv, struct Config *cfg)
 				      CLI_IO_SPEC_MAX, optarg) < 0)
 				return -2;
 			break;
+		case 4: { /* --press */
+			struct PanelEvent ev;
+			if (parse_press_spec(optarg, &ev) < 0) {
+				fprintf(stderr, "bad --press spec: %s\n", optarg);
+				return -2;
+			}
+			if (push_panel_event(cfg, &ev) < 0)
+				return -2;
+			break;
+		}
+		case 5: { /* --switch */
+			struct PanelEvent ev;
+			if (parse_switch_spec(optarg, &ev) < 0) {
+				fprintf(stderr, "bad --switch spec: %s\n", optarg);
+				return -2;
+			}
+			if (push_panel_event(cfg, &ev) < 0)
+				return -2;
+			break;
+		}
 		case 'l':
 			cfg->log_path = optarg;
 			break;
