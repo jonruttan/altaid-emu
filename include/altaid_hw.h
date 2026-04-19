@@ -121,21 +121,6 @@ typedef struct {
 	bool     fp_key_down[11];
 	uint64_t fp_key_until[11];        /* auto-release time in CPU ticks */
 
-	/*
-	 * Latched data-switch state (indices 0..7 -> D0..D7).
-	 *
-	 * Real hardware's D-switches are physical toggles that stay where
-	 * you flip them; the CPU reads the pin level each scan. `fp_key_down`
-	 * above is the momentary-press layer (used by the TUI's single-
-	 * keystroke pulse); `fp_switch_state` is the sticky layer driven by
-	 * the CLI `--switch` flag. The scan-row reader combines both, so
-	 * boot code that polls "is D3 on?" sees either/both.
-	 *
-	 * Not released by altaid_hw_panel_tick; only cleared by explicit
-	 * `altaid_hw_panel_set_switch(hw, i, false)`.
-	 */
-	bool     fp_switch_state[8];
-
 } AltaidHW;
 
 /* init/load */
@@ -161,7 +146,6 @@ uint8_t  altaid_hw_panel_stat4(const AltaidHW *hw);
 /* front-panel switch helpers */
 void altaid_hw_panel_press_key(AltaidHW *hw, uint8_t key_index, uint64_t now_tick, uint64_t hold_cycles);
 void altaid_hw_panel_tick(AltaidHW *hw, uint64_t now_tick);
-void altaid_hw_panel_set_switch(AltaidHW *hw, uint8_t d_index, bool on);
 
 /*
  * Enable/disable diagnostic logging of front-panel key press/release events
