@@ -146,10 +146,26 @@ const struct Config *cfg)
 		host->ui_inited = true;
 	}
 
-	if (host->cfg.headless && !host->cfg.use_pty) {
+	/*
+	 * Resolve --serial-in.  Explicit values ("stdin"/"-" enable stdin polling;
+	 * "none" disables).  Without an explicit value, default to stdin when in
+	 * headless mode without a PTY (this is the only mode where stdin is free
+	 * to act as the UART RX source).
+	 */
+	host->serial_in_stdin = false;
+	if (host->cfg.serial_in_spec) {
+		if (strcmp(host->cfg.serial_in_spec, "stdin") == 0
+		    || strcmp(host->cfg.serial_in_spec, "-") == 0) {
+			host->serial_in_stdin = true;
+		}
+	} else if (host->cfg.headless && !host->cfg.use_pty) {
+		host->serial_in_stdin = true;
+	}
+
+	if (host->serial_in_stdin) {
 		fl = fcntl(STDIN_FILENO, F_GETFL, 0);
 		if (fl >= 0)
-		(void)fcntl(STDIN_FILENO, F_SETFL, fl | O_NONBLOCK);
+			(void)fcntl(STDIN_FILENO, F_SETFL, fl | O_NONBLOCK);
 	}
 
 	/* Panel renderer configuration. */

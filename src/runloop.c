@@ -187,7 +187,7 @@ volatile sig_atomic_t *winch_flag)
 		if (!host->cfg.headless)
 		ui_poll(&host->ui, &core->ser, &core->hw, core->ser.tick,
 		key_hold_cycles);
-		else if (!host->cfg.use_pty)
+		else if (host->serial_in_stdin)
 		serial_routing_stdin_poll(&core->ser);
 
 		if (host->ui.quit) break;

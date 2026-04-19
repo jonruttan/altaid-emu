@@ -33,6 +33,8 @@ struct EmuHost {
 	int		serial_mirror_fd_spec;
 	int		serial_fd_override;
 
+	bool		serial_in_stdin;	/* if true, poll stdin for RX bytes */
+
 	uint64_t	next_panel_tick;
 
 	uint32_t	wall_start_usec;

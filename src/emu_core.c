@@ -146,6 +146,13 @@ void emu_core_run_batch(struct EmuCore *core, uint64_t batch_cycles)
 	while (core->ser.tick < batch_end) {
 		int t;
 
+		/*
+		 * Mirror the CPU's interrupt-enable state so the UART only pops
+		 * new RX frames from the queue when the ROM can actually receive
+		 * them (see serial.c).
+		 */
+		core->ser.gate_inte = core->cpu.inte;
+
 		set_hw_lines(core);
 
 		t = i8080_step(&core->cpu, &core->bus);

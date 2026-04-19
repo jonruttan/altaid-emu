@@ -193,6 +193,8 @@ void cli_usage(const char *argv0)
 		"  -S, --serial-fd <stdout|stderr>\n"
 		"                          Choose terminal stream for decoded TX bytes (non-PTY).\n"
 		"  -o, --serial-out <dest>   Send decoded TX bytes to: stdout|stderr|-|none|<file>.\n"
+		"  -i, --serial-in <src>     Feed emulated UART RX from: stdin|-|none.\n"
+		"                            Default: stdin when --headless without --pty, else none.\n"
 		"  -a, --serial-append       When --serial-out is a file, append instead of truncating.\n"
 		"\n"
 		"Cassette options (Altaid05 @ ports 0x44/0x45):\n"
@@ -248,6 +250,7 @@ int cli_parse_args(int argc, char **argv, struct Config *cfg)
 		{"pty",           no_argument,       0, 't'},
 		{"pty-input",     no_argument,       0, 'I'},
 		{"serial-out",    required_argument, 0, 'o'},
+		{"serial-in",     required_argument, 0, 'i'},
 		{"serial-fd",     required_argument, 0, 'S'},
 		{"serial-append", no_argument,       0, 'a'},
 		{"cass",          required_argument, 0, 'c'},
@@ -277,7 +280,7 @@ int cli_parse_args(int argc, char **argv, struct Config *cfg)
 
 	for (;;) {
 		opt = getopt_long(argc, argv,
-			"hVputIEm:b:C:o:S:alqnc:LRNAF:y:x:H:rzf:kvDT:",
+			"hVputIEm:b:C:o:i:S:alqnc:LRNAF:y:x:H:rzf:kvDT:",
 			kLongOpts, NULL);
 		if (opt == -1)
 			break;
@@ -350,6 +353,16 @@ int cli_parse_args(int argc, char **argv, struct Config *cfg)
 			break;
 		case 'o':
 			cfg->serial_out_spec = optarg;
+			break;
+		case 'i':
+			if (!optarg) return -2;
+			if (strcmp(optarg, "stdin") != 0
+			    && strcmp(optarg, "-") != 0
+			    && strcmp(optarg, "none") != 0) {
+				fprintf(stderr, "--serial-in: expected stdin|-|none, got %s\n", optarg);
+				return -2;
+			}
+			cfg->serial_in_spec = optarg;
 			break;
 		case 'S':
 			cfg->serial_fd_spec = optarg;

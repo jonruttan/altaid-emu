@@ -66,6 +66,7 @@ struct Config {
 	/* I/O. */
 	bool		use_pty;
 	bool		pty_input;	/* allow local keyboard input in --pty mode */
+	const char	*serial_in_spec;  /* stdin|-|none; NULL = default by mode */
 	const char	*serial_out_spec; /* stdout|stderr|-|none|<file> */
 	const char	*serial_fd_spec;  /* stdout|stderr */
 	bool		serial_append;

@@ -92,6 +92,7 @@ static char *test_serial_rx_frame_levels(void)
 	uint8_t level;
 
 	serial_init(&s, 2000000u, 9600u);
+	s.gate_inte = true;	/* simulate CPU with INTE enabled */
 	serial_host_enqueue(&s, 0xA5u); /* 0b10100101 */
 
 	s.tick = 0;
@@ -152,6 +153,7 @@ static char *test_serial_rx_irq_latch_persists(void)
 	SerialDev s;
 
 	serial_init(&s, 2000000u, 9600u);
+	s.gate_inte = true;	/* simulate CPU with INTE enabled */
 	serial_host_enqueue(&s, 0x55u);
 
 	s.tick = 0;
@@ -233,6 +235,39 @@ static char *test_serial_rx_queue_drop_when_full(void)
 	return NULL;
 }
 
+static char *test_serial_rx_inte_gate_holds_queue(void)
+{
+	SerialDev s;
+
+	serial_init(&s, 2000000u, 9600u);
+	serial_host_enqueue(&s, 0xA5u);
+
+	/* gate_inte=false should keep the byte in the queue: no frame starts. */
+	s.gate_inte = false;
+	s.tick = 0;
+	(void)serial_current_rx_level(&s);
+
+	_it_should(
+		"no rx frame starts while INTE is gated off",
+		false == s.rx_active
+		&& false == s.rx_irq_latched
+		&& 1u == s.rx_qt	/* byte still queued */
+	);
+
+	/* Opening the gate allows the frame to start on the next sample. */
+	s.gate_inte = true;
+	(void)serial_current_rx_level(&s);
+
+	_it_should(
+		"rx frame starts once INTE is enabled",
+		true == s.rx_active
+		&& true == s.rx_irq_latched
+		&& 0xA5u == s.rx_byte
+	);
+
+	return NULL;
+}
+
 static char *test_serial_tx_multi_sample_step(void)
 {
 	SerialDev s;
@@ -273,6 +308,7 @@ static char *run_tests(void)
 	_run_test(test_serial_tx_decode_emits_byte);
 	_run_test(test_serial_tx_stop_bit_low_no_emit);
 	_run_test(test_serial_rx_queue_drop_when_full);
+	_run_test(test_serial_rx_inte_gate_holds_queue);
 	_run_test(test_serial_tx_multi_sample_step);
 
 	return NULL;

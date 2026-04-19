@@ -40,6 +40,14 @@ typedef struct {
 
 	/* interrupt latch: goes true on RX start-bit edge */
 	bool		rx_irq_latched;
+
+	/*
+	 * New RX frames only start from the queue when this is true.  Callers
+	 * set it from the CPU's current INTE each instruction so bytes piped in
+	 * during DI sections (or pre-EI boot) stay queued instead of being
+	 * quietly lost to frames no one is listening for.
+	 */
+	bool		gate_inte;
 } SerialDev;
 
 void serial_init(SerialDev *s, uint32_t cpu_hz, uint32_t baud);

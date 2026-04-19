@@ -40,6 +40,17 @@ static int rx_q_pop(SerialDev* s)
 static void rx_start_frame_if_needed(SerialDev* s)
 {
 	if (s->rx_active) return;
+	/*
+	 * Gate frame start on the CPU having interrupts enabled.  Real hardware
+	 * delivers bytes at the serial line rate regardless of CPU state, which
+	 * means bytes arriving during DI sections or early boot are lost.  For
+	 * headless / scripted input this would mean "pipe a command during boot
+	 * and watch it vanish" -- unhelpful.  Holding the byte in the queue
+	 * until INTE is true gives the ROM's ISR a chance to handle each byte
+	 * in turn, matching what an operator typing at a real terminal would
+	 * observe (their own finger timing stays out of the way of boot).
+	 */
+	if (!s->gate_inte) return;
 	int ch = rx_q_pop(s);
 	if (ch < 0) return;
 

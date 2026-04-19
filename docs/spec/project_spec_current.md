@@ -78,6 +78,13 @@ These options MUST exist and MUST remain stable unless explicitly deprecated in 
 - `--panel` : start with panel visible (TUI) / enable text snapshots at startup (text mode).
 - `--pty` : run in PTY mode (serial I/O connected to a PTY; local terminal becomes view/control UI).
 - `--pty-input` : in PTY mode, allow local keyboard input to also feed the emulated serial input.
+- `--serial-in <src>` : route emulated UART RX from an explicit source.
+  - `stdin` / `-` : read bytes from the process's stdin.
+  - `none` : no host serial RX (the UART never delivers bytes from the host).
+  - Default: `stdin` when `--headless` without `--pty`, otherwise `none`.
+  - The UART delivers a queued byte only when the CPU has interrupts enabled
+    (INTE=true).  Bytes arriving during DI sections or pre-EI boot stay
+    queued until the ROM is ready, instead of being lost mid-boot.
 
 ## Terminal sizing
 

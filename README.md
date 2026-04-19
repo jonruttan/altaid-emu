@@ -142,10 +142,16 @@ Panel options:
 Serial options:
 - `-t, --pty`: expose emulated serial via a host PTY (for `screen`, `minicom`, `lrzsz`, etc.)
 - `-I, --pty-input`: in `--pty` mode, allow local keyboard input as serial RX
+- `-i, --serial-in <src>`: feed emulated UART RX from `stdin` / `-` / `none`.
+  - Default: `stdin` when `--headless` without `--pty`, else `none`.
 - `-S, --serial-fd <stdout|stderr>`: choose terminal stream for decoded TX bytes (non-PTY only)
 - `-o, --serial-out <dest>`: send decoded TX bytes to `stdout`, `stderr`, `-`, `none`, or a file path
   - In `--pty` mode, this is a **mirror** (PTY remains primary)
 - `-a, --serial-append`: when `--serial-out` is a file, append instead of truncating
+
+Queued RX bytes are only delivered to the UART while the CPU has interrupts
+enabled, so bytes you pipe in before the ROM is ready stay queued instead of
+being lost during boot's DI sections.
 
 Cassette options:
 - `-c, --cass <file>`: attach cassette file (ALTAP001)
