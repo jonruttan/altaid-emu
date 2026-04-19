@@ -107,9 +107,6 @@ volatile sig_atomic_t *winch_flag)
 	bool have_run_deadline;
 	int term_fd_hint;
 	int serial_fd;
-	uint64_t panel_event_tick[CLI_PANEL_EVENT_MAX];
-	bool panel_event_fired[CLI_PANEL_EVENT_MAX];
-	unsigned panel_event_count;
 
 	if (!host || !core) return 1;
 
@@ -118,17 +115,6 @@ volatile sig_atomic_t *winch_flag)
 		? (uint64_t)core->cfg.cpu_hz *
 			(uint64_t)host->cfg.max_run_ms / 1000ull
 		: 0;
-
-	/*
-	 * Precompute scheduled panel-event tick deadlines and clear their
-	 * fired flags.  Each event fires at most once per emu_run call.
-	 */
-	panel_event_count = host->cfg.panel_event_count;
-	for (unsigned i = 0; i < panel_event_count; i++) {
-		panel_event_tick[i] = (uint64_t)core->cfg.cpu_hz *
-			(uint64_t)host->cfg.panel_events[i].at_ms / 1000ull;
-		panel_event_fired[i] = false;
-	}
 
 	memset(&pty_out, 0, sizeof(pty_out));
 	memset(&serial_out, 0, sizeof(serial_out));
@@ -188,34 +174,6 @@ volatile sig_atomic_t *winch_flag)
 
 		if (have_run_deadline && core->ser.tick >= run_deadline_tick)
 			break;
-
-		/*
-		 * Fire any scheduled --press / --switch events whose
-		 * deadline has elapsed.  Each fires exactly once.
-		 */
-		for (unsigned i = 0; i < panel_event_count; i++) {
-			const struct PanelEvent *ev;
-			uint64_t hold;
-
-			if (panel_event_fired[i])
-				continue;
-			if (core->ser.tick < panel_event_tick[i])
-				continue;
-
-			ev = &host->cfg.panel_events[i];
-			if (ev->kind == PANEL_EVENT_SWITCH) {
-				altaid_hw_panel_set_switch(&core->hw,
-					ev->key_index, ev->value);
-			} else {
-				hold = ev->hold_ms
-					? (uint64_t)core->cfg.cpu_hz *
-						(uint64_t)ev->hold_ms / 1000ull
-					: key_hold_cycles;
-				altaid_hw_panel_press_key(&core->hw,
-					ev->key_index, core->ser.tick, hold);
-			}
-			panel_event_fired[i] = true;
-		}
 
 		if (winch_flag && *winch_flag) {
 			*winch_flag = 0;

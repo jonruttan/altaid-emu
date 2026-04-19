@@ -153,22 +153,6 @@ Queued RX bytes are only delivered to the UART while the CPU has interrupts
 enabled, so bytes you pipe in before the ROM is ready stay queued instead of
 being lost during boot's DI sections.
 
-Front-panel input (repeatable):
-- `--press <key>[@<ms>[:<hold_ms>]]`: momentary press of `D0`..`D7`,
-  `RUN`, `MODE`, or `NEXT` at emulated time `<ms>` (default 0), auto-
-  released after `<hold_ms>` (defaults to `--hold`, 300 ms).
-- `--switch <Dn>=<0|1>[@<ms>]`: set a latched data-switch state at
-  `<ms>` (default 0).  Data switches are physical toggles on real
-  hardware — they stay where set until another `--switch Dn=0` or
-  emulator exit.  Only `D0`..`D7` latch; `RUN`/`MODE`/`NEXT` are
-  momentary-only.
-
-```sh
-# Hold D3 latched from t=0 and pulse RUN at t=1 second:
-./altaid-emu altaid06.rom --headless --run-ms 5000 \
-  --switch D3=1 --press RUN@1000
-```
-
 Cassette options:
 - `-c, --cass <file>`: attach cassette file (ALTAP001)
 - `-L, --cass-play`: start playing at tick 0

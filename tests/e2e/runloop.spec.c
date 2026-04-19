@@ -241,64 +241,11 @@ static char *test_load_bad_spec_fails_at_startup(void)
 	return NULL;
 }
 
-static char *test_press_and_switch_flags_accepted(void)
-{
-	char rom_path[64];
-	char cmd[512];
-	int rc;
-
-	if (make_temp_rom(rom_path, sizeof(rom_path)) != 0)
-		return "failed to create temp ROM";
-
-	snprintf(cmd, sizeof(cmd),
-		"./altaid-emu %s --headless --turbo --run-ms 5 "
-		"--press RUN@1 --press D3@2:50 --switch D0=1 --switch D7=0@4 "
-		"</dev/null 2>/dev/null",
-		rom_path);
-
-	rc = helper_system_status(cmd);
-	unlink(rom_path);
-
-	_it_should(
-		"--press and --switch are accepted and the emu exits cleanly",
-		0 == rc
-	);
-
-	return NULL;
-}
-
-static char *test_bad_press_switch_fails_at_startup(void)
-{
-	char rom_path[64];
-	char cmd[512];
-	int rc;
-
-	if (make_temp_rom(rom_path, sizeof(rom_path)) != 0)
-		return "failed to create temp ROM";
-
-	snprintf(cmd, sizeof(cmd),
-		"./altaid-emu %s --headless --turbo --run-ms 1 "
-		"--press FOO </dev/null 2>/dev/null",
-		rom_path);
-
-	rc = helper_system_status(cmd);
-	unlink(rom_path);
-
-	_it_should(
-		"malformed --press spec fails at CLI parse",
-		0 != rc
-	);
-
-	return NULL;
-}
-
 static char *run_tests(void)
 {
 	_run_test(test_runloop_run_ms_exits_cleanly);
 	_run_test(test_runloop_run_ms_zero_treated_as_unlimited);
 	_run_test(test_load_ram_at_offset_and_save_round_trip);
 	_run_test(test_load_bad_spec_fails_at_startup);
-	_run_test(test_press_and_switch_flags_accepted);
-	_run_test(test_bad_press_switch_fails_at_startup);
 	return NULL;
 }
