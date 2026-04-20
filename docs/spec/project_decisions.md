@@ -199,3 +199,49 @@ and maintenance.
   - `src/serial.c`, `src/emu_core.c`
   - `README.md` (Serial options)
   - Commit af6df67
+
+### DEC-0029: Panel input is a dynamic press event, driven by Ctrl-P on headless stdin
+
+- Date: 2026-04-19
+- Status: Accepted
+- Context:
+  - Front-panel input was reachable in the TUI (Ctrl-P + chord) but
+    not in `--headless` mode, blocking scripted tests that need to
+    press RUN, choose a boot baud via D-switches, etc.
+  - Two earlier attempts landed and were reverted:
+    `ed082a5` modelled D-switches as latched state with a
+    `--switch <Dn>=<0|1>` flag.  Wrong framing: a switch is named
+    for the act of switching, not a stored orientation.
+    `5f9ab30` added a `--press <key>@<ms>` CLI flag that scheduled
+    presses at fixed emulated times.  Wrong shape: CLI flags are
+    static declarations; panel presses are dynamic runtime events
+    whose timing depends on what the ROM is doing, not pre-known
+    at emulator startup.
+  - The TUI already solved this correctly: Ctrl-P + chord on the
+    keyboard, handled live.  We just needed the same protocol on
+    headless stdin.
+- Decision:
+  - In `--headless` mode with `--serial-in stdin` (the default),
+    the stdin poll parses the Ctrl-P (0x10) panel prefix and
+    interprets the following byte as a chord: '1'..'8' -> D0..D7,
+    'r' -> RUN, 'm' -> MODE, 'n' -> NEXT, 'N' -> D7+NEXT alias.
+    Recognized chord bytes call the existing
+    `altaid_hw_panel_press_key()`.  Unknown chords are dropped.
+    Unprefixed bytes continue to the UART RX queue.
+  - Multi-key chords need no dedicated syntax: presses dispatched
+    in a single poll share the same tick and hold, so the CPU's
+    scan-matrix read sees every key pressed simultaneously while
+    the holds overlap.  A caller who wants D0+D3 just writes
+    `\x101\x103` in one stdin write.
+  - TUI behavior and state are unchanged.
+- Consequences:
+  - No new CLI flag, no new state in the HW model, no stateio
+    version bump.  The reverted approaches are named here so the
+    next reviewer doesn't re-propose them.
+  - Binary traffic piped through `--serial-in stdin` that contains
+    `0x10` will have bytes consumed by the prefix machine.  Users
+    with binary flows (XMODEM etc.) should use `--pty`.
+- References:
+  - `src/serial_routing.c`, `include/serial_routing.h`
+  - `src/ui.c` (authoritative chord table in `ui_handle_panel_key`)
+  - Reverted: `ed082a5`, `5f9ab30` (reverts `a919ba6`, `6622c61`)
