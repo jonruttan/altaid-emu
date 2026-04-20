@@ -118,3 +118,100 @@ void serial_routing_stdin_poll(SerialDev *ser)
 		return;
 	}
 }
+
+/*
+ * Ctrl-P panel-prefix byte (matches TUI's panel-prefix in src/ui.c).
+ */
+#define PANEL_PREFIX_BYTE	0x10u
+
+/*
+ * Apply a single chord byte that followed Ctrl-P.  Returns true if the
+ * chord was recognized (press fired); false otherwise.  Callers always
+ * clear the prefix flag either way -- unknown chords are dropped, not
+ * passed through to serial.
+ */
+static bool dispatch_panel_chord(uint8_t chord, AltaidHW *hw,
+				 uint64_t now_tick, uint64_t hold_cycles)
+{
+	if (!hw) return false;
+
+	if (chord >= (uint8_t)'1' && chord <= (uint8_t)'8') {
+		altaid_hw_panel_press_key(hw, (uint8_t)(chord - (uint8_t)'1'),
+					  now_tick, hold_cycles);
+		return true;
+	}
+	if (chord == (uint8_t)'r') {
+		altaid_hw_panel_press_key(hw, 8, now_tick, hold_cycles);
+		return true;
+	}
+	if (chord == (uint8_t)'m') {
+		altaid_hw_panel_press_key(hw, 9, now_tick, hold_cycles);
+		return true;
+	}
+	if (chord == (uint8_t)'n') {
+		altaid_hw_panel_press_key(hw, 10, now_tick, hold_cycles);
+		return true;
+	}
+	if (chord == (uint8_t)'N') {
+		/* TUI alias: D7 + NEXT chord ("back" in some monitors). */
+		altaid_hw_panel_press_key(hw, 7, now_tick, hold_cycles);
+		altaid_hw_panel_press_key(hw, 10, now_tick, hold_cycles);
+		return true;
+	}
+	return false;
+}
+
+void serial_routing_stdin_dispatch(const uint8_t *buf, size_t n,
+				   SerialDev *ser, AltaidHW *hw,
+				   uint64_t now_tick, uint64_t hold_cycles,
+				   struct StdinPanelState *state)
+{
+	size_t i;
+
+	if (!buf || !state) return;
+
+	for (i = 0; i < n; i++) {
+		uint8_t ch = buf[i];
+
+		if (state->prefix_active) {
+			state->prefix_active = false;
+			(void)dispatch_panel_chord(ch, hw, now_tick,
+						   hold_cycles);
+			continue;
+		}
+
+		if (ch == PANEL_PREFIX_BYTE) {
+			state->prefix_active = true;
+			continue;
+		}
+
+		if (ser) {
+			if (ch == (uint8_t)'\n')
+				ch = (uint8_t)'\r';
+			serial_host_enqueue(ser, ch);
+		}
+	}
+}
+
+void serial_routing_stdin_poll_with_panel(SerialDev *ser, AltaidHW *hw,
+					  uint64_t now_tick,
+					  uint64_t hold_cycles,
+					  struct StdinPanelState *state)
+{
+	uint8_t buf[256];
+
+	if (!state) return;
+
+	for (;;) {
+		ssize_t n = ALTAID_IO_READ(STDIN_FILENO, buf, sizeof(buf));
+		if (n > 0) {
+			serial_routing_stdin_dispatch(buf, (size_t)n, ser, hw,
+						      now_tick, hold_cycles,
+						      state);
+			continue;
+		}
+		if (n == 0) return;
+		if (errno == EAGAIN || errno == EWOULDBLOCK) return;
+		return;
+	}
+}

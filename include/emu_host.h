@@ -5,6 +5,7 @@
 
 #include "cli.h"
 #include "emu_core.h"
+#include "serial_routing.h"
 #include "ui.h"
 
 #include <stdbool.h>
@@ -34,6 +35,7 @@ struct EmuHost {
 	int		serial_fd_override;
 
 	bool		serial_in_stdin;	/* if true, poll stdin for RX bytes */
+	struct StdinPanelState stdin_panel;	/* Ctrl-P prefix machine for headless */
 
 	uint64_t	next_panel_tick;
 
