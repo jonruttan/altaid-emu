@@ -153,17 +153,6 @@ Queued RX bytes are only delivered to the UART while the CPU has interrupts
 enabled, so bytes you pipe in before the ROM is ready stay queued instead of
 being lost during boot's DI sections.
 
-Scripted front-panel input in `--headless`: stdin recognises the same
-`Ctrl-P + <chord>` protocol as the TUI.  `\x10r` pulses RUN, `\x101`..`\x108`
-press D0..D7, `\x10m` / `\x10n` / `\x10N` map to MODE / NEXT / D7+NEXT.
-Multiple `\x10<key>` pairs in one stdin write chord naturally (all share
-the same dispatch tick and `--hold` duration).
-
-```sh
-# boot and pulse RUN + D3 together:
-printf '\x10r\x103' | ./altaid-emu rom.bin --headless --run-ms 2000
-```
-
 Cassette options:
 - `-c, --cass <file>`: attach cassette file (ALTAP001)
 - `-L, --cass-play`: start playing at tick 0

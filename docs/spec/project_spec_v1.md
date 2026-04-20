@@ -129,10 +129,6 @@ V1-SER-003 (SHOULD; Status: Planned): Documentation SHOULD include a "golden pat
 
 V1-SER-004 (SHOULD; Status: Done): Emulated UART RX MUST support an explicit host input source for scriptable / headless use.  Delivered via `--serial-in <src>` with values `stdin`, `-`, `none`; default `stdin` when `--headless` without `--pty`, else `none`.  Queued RX bytes are only delivered to the UART while the CPU has interrupts enabled, so piped bytes are not lost during pre-EI boot DI sections.
 
-# Front panel
-
-V1-PANEL-001 (SHOULD; Status: Done): Panel keys MUST be driveable from headless / scripted runs.  Delivered by the headless stdin path recognising the same Ctrl-P + chord protocol the TUI uses: D0..D7 via '1'..'8', RUN/MODE/NEXT via r/m/n, and the D7+NEXT TUI alias via 'N'.  Multi-key chords emerge naturally from rapid-succession input in a single stdin write (all presses share the same dispatch tick and hold duration).
-
 V1-SER-010 (SHOULD; Status: Planned): The repo SHOULD include a small serial sending utility in `tools/` that supports:
 - configurable per-character and per-line pacing
 - CR/LF translation modes

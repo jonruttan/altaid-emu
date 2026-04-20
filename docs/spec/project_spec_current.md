@@ -86,29 +86,6 @@ These options MUST exist and MUST remain stable unless explicitly deprecated in 
     (INTE=true).  Bytes arriving during DI sections or pre-EI boot stay
     queued until the ROM is ready, instead of being lost mid-boot.
 
-## Scripted front-panel input (headless)
-
-When `--headless` is in effect and stdin is routed to UART RX (the
-default), stdin bytes are parsed for a Ctrl-P (`0x10`) panel-prefix
-sequence that fires the same panel-key API the TUI uses:
-
-- `<ctrl-p> 1` .. `<ctrl-p> 8` : press D0 .. D7
-- `<ctrl-p> r` : press RUN
-- `<ctrl-p> m` : press MODE
-- `<ctrl-p> n` : press NEXT
-- `<ctrl-p> N` : press D7 + NEXT as a chord (TUI alias)
-
-Every press auto-releases after `--hold` (default 300 ms).
-
-Multi-key chords: send multiple `<ctrl-p> <key>` pairs in one stdin
-write.  All presses that arrive in the same poll batch dispatch at
-the same emulated tick with the same hold, so the ROM's switch-matrix
-scan sees them pressed simultaneously.
-
-Unknown chord bytes are dropped silently.  Binary traffic that
-contains `0x10` should use `--pty` instead of `--serial-in stdin` to
-avoid the prefix machine eating bytes.
-
 ## Terminal sizing
 
 - TUI mode MUST size itself from the best available terminal size probe.

@@ -241,43 +241,11 @@ static char *test_load_bad_spec_fails_at_startup(void)
 	return NULL;
 }
 
-static char *test_stdin_ctrl_p_chord_passes_through_emu(void)
-{
-	char rom_path[64];
-	char cmd[512];
-	int rc;
-
-	if (make_temp_rom(rom_path, sizeof(rom_path)) != 0)
-		return "failed to create temp ROM";
-
-	/*
-	 * Pipe Ctrl-P + 'r' plus a few serial bytes.  The zero-ROM has
-	 * no observable behavior in response, but the binary must accept
-	 * the stream and exit cleanly -- guards against regressions in
-	 * the parser plumbing.
-	 */
-	snprintf(cmd, sizeof(cmd),
-		"printf '\\x10rhello' | ./altaid-emu %s "
-		"--headless --turbo --run-ms 50",
-		rom_path);
-
-	rc = helper_system_status(cmd);
-	unlink(rom_path);
-
-	_it_should(
-		"Ctrl-P chord on stdin is accepted and emu exits cleanly",
-		0 == rc
-	);
-
-	return NULL;
-}
-
 static char *run_tests(void)
 {
 	_run_test(test_runloop_run_ms_exits_cleanly);
 	_run_test(test_runloop_run_ms_zero_treated_as_unlimited);
 	_run_test(test_load_ram_at_offset_and_save_round_trip);
 	_run_test(test_load_bad_spec_fails_at_startup);
-	_run_test(test_stdin_ctrl_p_chord_passes_through_emu);
 	return NULL;
 }
